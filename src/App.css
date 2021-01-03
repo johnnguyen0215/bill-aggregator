@@ -10,3 +10,7 @@ html {
 .toolbar {
   justify-content: flex-end;
 }
+
+.MuiBackdrop-root.backdrop {
+  z-index: 1000;
+}
