@@ -1,30 +1,57 @@
 import './App.css';
 import { useEffect, useCallback, useState, useRef } from 'react';
 
-import { Button, Container, Backdrop, CircularProgress, AppBar, Toolbar, TextField } from '@material-ui/core';
+import { Button, Container, Backdrop, CircularProgress, AppBar, Toolbar, TextField, Tabs, Tab } from '@material-ui/core';
 
 const gapi = window.gapi;
+
+function TabPanel (props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`bill-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        children
+      )}
+    </div>
+  );
+}
 
 function App() {
   const [isSignedIn, setIsSignedIn] = useState(null);
   const [pending, setPending] = useState(false);
   const [totalBill, setTotalBill] = useState(0);
   const [manualInputValue, setManualInputValue] = useState();
+  const [tabValue, setTabValue] = useState(0);
+  const [billAmounts, setBillAmounts] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState('');
 
-  const billsInfo = useRef([
-    {
+  const billsInfo = useRef({
+    'socal-gas': {
+      name: 'Socal Gas',
+      id: 'socal-gas',
       email: 'customerservice@socalgas.com',
       subject: 'Your Bill from Southern California Gas Company'
     },
-    {
+    'socal-edison': {
+      name: 'Socal Edison',
+      id: 'socal-edison',
       email: 'ibp3@scewebservices.com',
       subject: 'SCE Bill is Ready to View'
     },
-    {
+    'geico': {
+      name: 'Geico',
+      id: 'geico',
       email: 'geico@email1.geico.com',
       subject: 'consider reviewing this pending GEICO payment'
     }
-  ])
+  })
 
   const initGapi = useCallback(async () => {
     await gapi.client.init({
@@ -59,54 +86,71 @@ function App() {
     return `from:${email} AND subject:${subject}`;
   }
 
+  const getMessageBody = async (billInfo) => {
+    const response = await gapi.client.gmail.users.messages.list(
+      {
+        userId: "me",
+        maxResults: 10,
+        q: queryBuilder(billInfo.email, billInfo.subject)
+      });
+
+    const responseObject = JSON.parse(response.body);
+
+    const messageId = responseObject.messages[0].id;
+    const messageResponse = await gapi.client.gmail.users.messages.get({ userId: "me", id: messageId });
+
+    const messageResponseBody = JSON.parse(messageResponse.body);
+
+    const dateHeader = messageResponseBody.payload.headers.find((header) => {
+      return header.name === 'Date';
+    });
+
+    const date = dateHeader.value;
+
+    if (isDateInRange(date)) {
+      const partData = messageResponseBody.payload.parts[0].body.data;
+
+      const partBody = atob(partData.replace(/-/g, '+').replace(/_/g, '/'));
+
+      return partBody;
+    }
+
+    return false;
+  }
+
   // Algorithm, use the messages in between beginning of month to current date.
   // If two results are returned, take the later date.
   // If one result is returned and the date occurs before the middle of the month
   // then that is an old bill and should not be included in the final amount
-
   const handleGetTotalBill= async () => {
     setPending(true);
 
     let totalBillAmount = 0;
 
-    for (let i = 0; i < billsInfo.current.length; i++) {
-      const billInfo = billsInfo.current[i];
+    const billAmounts = [];
 
-      const response = await gapi.client.gmail.users.messages.list(
-        {
-          userId: "me",
-          maxResults: 10,
-          q: queryBuilder(billInfo.email, billInfo.subject)
+    const values = Object.values(billsInfo.current);
+
+    for (let i = 0; i < values.length; i++) {
+      const billInfo = values[i];
+
+      const messageBody = await getMessageBody(billInfo);
+
+      if (messageBody) {
+        const billAmount = parseFloat(messageBody.match(/\$\s*\d*.\d{2}/)[0].slice(1));
+
+        billAmounts.push({
+          id: billInfo.id,
+          amount: billAmount,
         });
-
-      const responseObject = JSON.parse(response.body);
-
-      const messageId = responseObject.messages[0].id;
-      const messageResponse = await gapi.client.gmail.users.messages.get({ userId: "me", id: messageId });
-
-      const messageResponseBody = JSON.parse(messageResponse.body);
-
-      const dateHeader = messageResponseBody.payload.headers.find((header) => {
-        return header.name === 'Date';
-      });
-
-      const date = dateHeader.value;
-
-      if (isDateInRange(date)) {
-        const partData = messageResponseBody.payload.parts[0].body.data;
-
-        const partBody = atob(partData.replace(/-/g, '+').replace(/_/g, '/'));
-
-        const billAmount = parseFloat(partBody.match(/\$\s*\d*.\d{2}/)[0].slice(1));
-
-        setPending(false);
 
         totalBillAmount += billAmount;
       }
     }
 
+    setBillAmounts(billAmounts);
     setPending(false);
-    setTotalBill(totalBillAmount);
+    setTotalBill(totalBill + totalBillAmount);
   }
 
   const handleSignin = async () => {
@@ -124,9 +168,8 @@ function App() {
   }
 
   const handleInputKeydown = async (event) => {
-    console.log(event);
     if (event.key === 'Enter') {
-      setTotalBill(totalBill + parseFloat(manualInputValue));
+      setTotalBill(parseFloat(totalBill) + parseFloat(manualInputValue));
     }
   }
 
@@ -148,6 +191,25 @@ function App() {
     }
   }, [isSignedIn])
 
+  const handleTabsChange = async (event, newValue) => {
+    setPending(true);
+
+    if (newValue > 0) {
+      const values = Object.values(billsInfo.current);
+
+      const billIndex = newValue - 1;
+
+      const billInfo = values[billIndex];
+
+      const messageBody = await getMessageBody(billInfo);
+
+      setCurrentMessage(messageBody);
+    }
+
+    setPending(false);
+    setTabValue(newValue);
+  }
+
   return (
     <div className="App">
       <Backdrop className="backdrop" open={pending}>
@@ -156,44 +218,118 @@ function App() {
       <AppBar position="static">
         <Toolbar className="toolbar">
           {
-            isSignedIn !== null && (!isSignedIn ?
-            <div id="google-signin-button" onClick={handleSignin} /> :
-            <Button variant="contained" onClick={handleSignout} color="secondary">Sign Out</Button>)
+            billsInfo.current &&
+            (
+              <Tabs className="billTabs" value={tabValue} onChange={handleTabsChange} aria-label="Change bill tab">
+                <Tab label="aggregator page" id="aggregator-page" />
+                {
+                  billAmounts && billAmounts.length > 0 && Object.values(billsInfo.current).map((billInfo) => {
+                    return (
+                      <Tab label={billInfo.name} id={billInfo.id} />
+                    );
+                  })
+                }
+              </Tabs>
+            )
+          }
+          {
+            <div className="buttonContainer">
+              {
+                isSignedIn !== null && (!isSignedIn ?
+                  <div id="google-signin-button" onClick={handleSignin} /> :
+                  <Button className="signoutButton" variant="contained" onClick={handleSignout} color="secondary">Sign Out</Button>)
+              }
+            </div>
           }
         </Toolbar>
       </AppBar>
       <Container>
-        <h1>Bill Aggregator</h1>
-        <div className="homePage">
-          {
-            isSignedIn &&
-            (
-              <>
-                <Button variant="contained" onClick={handleGetTotalBill} color="secondary">Get Total</Button>
-              </>
-            )
-          }
-        </div>
-        <div className="manualInput">
-          <TextField
-            onChange={handleInputOnChange}
-            onKeyDown={handleInputKeydown}
-            value={manualInputValue}
-            type="number"
-          />
-          <Button variant="contained" onClick={() => setTotalBill(manualInputValue + totalBill)} color="primary">Submit</Button>
-          <Button variant="contained" onClick={() => setTotalBill(0)} color="primary">Clear</Button>
-        </div>
-        {
-         !pending &&
-          <div className="billTotals">
-            <h2>Bill Total</h2>
+        <TabPanel value={tabValue} index={0}>
+          <h1>Bill Aggregator</h1>
+          <div className="homePage">
             {
-              totalBill ?
-                totalBill :
-                'No bills'
+              isSignedIn &&
+              (
+                <>
+                  <Button variant="contained" onClick={handleGetTotalBill} color="secondary">Get Total</Button>
+                  <div className="manualInput">
+                    <div className="inputContainer">
+                      <label htmlFor="manualInputField">Manual Input: $</label>
+                      <TextField
+                        id="manualInputField"
+                        onChange={handleInputOnChange}
+                        onKeyDown={handleInputKeydown}
+                        value={manualInputValue}
+                        type="number"
+                      />
+                    </div>
+                    <div className="manualInputBtnContainer">
+                      <Button variant="contained" onClick={() => setTotalBill(parseFloat(manualInputValue) + parseFloat(totalBill))} color="primary">Submit</Button>
+                      <Button
+                        variant="contained"
+                        onClick={() => {
+                          setTotalBill(0);
+                          setBillAmounts([]);
+                        }}
+                        color="primary"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )
             }
           </div>
+          {
+          !pending && billAmounts && billAmounts.length > 0 &&
+            <div className="billsInfo">
+              {
+                billAmounts &&
+                billAmounts.map((billAmount) => {
+                  const billInfo = billsInfo.current[billAmount.id];
+
+                  return (
+                    <div className="billInfoContainer">
+                      <label className="billInfoName">{billInfo.name}: </label>
+                      <span>${billAmount.amount}</span>
+                    </div>
+                  )
+                })
+              }
+              <div className="billsInfoContainer">
+                <label className="billsInfoName">Total: </label>
+                <span>
+                  {
+                    totalBill ?
+                      `$${totalBill}` :
+                      'No bills'
+                  }
+                </span>
+              </div>
+            </div>
+          }
+        </TabPanel>
+        {
+          billAmounts.map((billAmount, index) => {
+            return (
+              <TabPanel value={tabValue} index={index + 1}>
+                <div>Total: {billAmount.amount}</div>
+                {
+                  currentMessage ?
+                    (
+                      <div
+                        className="billHtml"
+                        dangerouslySetInnerHTML={{
+                          __html: currentMessage
+                        }}
+                      />
+                    ) :
+                    <div>No Bill could be found for payment period.</div>
+                }
+              </TabPanel>
+            );
+          })
         }
       </Container>
     </div>

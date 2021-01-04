@@ -3,14 +3,41 @@ html {
   background-color: #c7ecee;
 }
 
-.App {
-  text-align: center;
-}
-
-.toolbar {
-  justify-content: flex-end;
-}
-
 .MuiBackdrop-root.backdrop {
   z-index: 1000;
+}
+
+.billTabs {
+  justify-self: flex-start;
+}
+
+.buttonContainer {
+  display: inline-block;
+  margin-left: auto;
+}
+
+.manualInput {
+  margin-top: 20px;
+}
+
+.manualInputBtnContainer {
+  margin-top: 20px;
+}
+
+.manualInputBtnContainer button {
+  margin-right: 10px;
+}
+
+.billsInfo {
+  margin-top: 20px;
+}
+
+.inputContainer {
+  display: flex;
+  align-items: center;
+}
+
+label {
+  font-weight: bold;
+  margin-right: 5px;
 }
