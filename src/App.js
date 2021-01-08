@@ -7,6 +7,7 @@ import NavDrawer from './components/navDrawer/index';
 import DrawerContext from './contexts/drawerContext';
 import NavBar from './components/navBar/index';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import BillPage from './components/billPage/index';
 
 const gapi = window.gapi;
 
@@ -102,6 +103,15 @@ function App() {
                 <Route path="/">
                   <AggregatorPage isSignedIn={isSignedIn} billsInfo={billsInfo} gapi={gapi} />
                 </Route>
+                {
+                  billsInfo.current.map((billInfo) => {
+                    return (
+                      <Route path={billInfo.id}>
+                        <BillPage billInfo={billInfo} />
+                      </Route>
+                    );
+                  })
+                }
               </Switch>
             </Container>
           </main>

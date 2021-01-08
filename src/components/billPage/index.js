@@ -1,5 +1,14 @@
+import { useEffect, useState } from "react";
+
 function BillPage(props) {
-  const {amount, message} = props;
+  const {billInfo} = props;
+
+  const {message, setMessage} = useState('');
+  const {amount, setAmount} = useState(null);
+
+  useEffect(() => {
+
+  });
 
   return (
     <div className="billPage">
