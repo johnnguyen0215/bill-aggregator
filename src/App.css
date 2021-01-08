@@ -41,3 +41,7 @@ label {
   font-weight: bold;
   margin-right: 5px;
 }
+
+.App {
+  display: flex;
+}
