@@ -1,12 +1,12 @@
 import './App.css';
 import { useEffect, useCallback, useState, useRef } from 'react';
-import { Button, Container, Backdrop, CircularProgress, AppBar, Toolbar } from '@material-ui/core';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
+import { Container, Backdrop, CircularProgress } from '@material-ui/core';
 import AggregatorPage from './components/aggregatorPage/index';
 import useStyles from './customHooks/useStyles';
 import NavDrawer from './components/navDrawer/index';
 import DrawerContext from './contexts/drawerContext';
+import NavBar from './components/navBar/index';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
 const gapi = window.gapi;
 
@@ -82,45 +82,32 @@ function App() {
   }, [isSignedIn])
 
   return (
-    <DrawerContext.Provider
-      values={{
-        setDrawerOpen,
-        drawerOpen,
-      }}
-    >
-      <div className="App">
-        <Backdrop className="backdrop" open={pending}>
-          <CircularProgress color="secondary" />
-        </Backdrop>
-        <AppBar position="fixed" className={classes.appBar}>
-          <Toolbar className="toolbar">
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={setDrawerOpen(!drawerOpen)}
-              className={classes.menuButton}
-            >
-              <MenuIcon />
-            </IconButton>
-            <div className="buttonContainer">
-              {
-                isSignedIn !== null && (!isSignedIn ?
-                  <div id="google-signin-button" onClick={handleSignin} /> :
-                  <Button className="signoutButton" variant="contained" onClick={handleSignout} color="secondary">Sign Out</Button>)
-              }
-            </div>
-          </Toolbar>
-        </AppBar>
-        <NavDrawer billsInfo={billsInfo.current}></NavDrawer>
-        <main className={classes.content}>
-          <Container>
-            <div className={classes.toolbar}></div>
-            <AggregatorPage isSignedIn={isSignedIn} billsInfo={billsInfo} gapi={gapi} />
-          </Container>
-        </main>
-      </div>
-    </DrawerContext.Provider>
+    <Router>
+      <DrawerContext.Provider
+        value={{
+          setDrawerOpen,
+          drawerOpen,
+        }}
+      >
+        <div className="App">
+          <Backdrop className="backdrop" open={pending}>
+            <CircularProgress color="secondary" />
+          </Backdrop>
+          <NavBar isSignedIn={isSignedIn} handleSignin={handleSignin} handleSignout={handleSignout} ></NavBar>
+          <NavDrawer billsInfo={billsInfo.current}></NavDrawer>
+          <main className={classes.content}>
+            <Container>
+              <div className={classes.toolbar}></div>
+              <Switch>
+                <Route path="/">
+                  <AggregatorPage isSignedIn={isSignedIn} billsInfo={billsInfo} gapi={gapi} />
+                </Route>
+              </Switch>
+            </Container>
+          </main>
+        </div>
+      </DrawerContext.Provider>
+    </Router>
   );
 }
 
