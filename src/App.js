@@ -80,7 +80,7 @@ function App() {
         theme: 'dark',
       });
     }
-  }, [isSignedIn])
+  }, [isSignedIn]);
 
   return (
     <Router>
@@ -100,14 +100,17 @@ function App() {
             <Container>
               <div className={classes.toolbar}></div>
               <Switch>
-                <Route path="/">
-                  <AggregatorPage isSignedIn={isSignedIn} billsInfo={billsInfo} gapi={gapi} />
+                <Route exact path="/">
+                  <AggregatorPage isSignedIn={isSignedIn} billsInfo={billsInfo.current} gapi={gapi} />
                 </Route>
                 {
-                  billsInfo.current.map((billInfo) => {
+                  Object.values(billsInfo.current).map((billInfo) => {
+
+                    console.log(billInfo);
+
                     return (
-                      <Route path={billInfo.id}>
-                        <BillPage billInfo={billInfo} />
+                      <Route path={`/${billInfo.id}`}>
+                        <BillPage gapi={gapi} billInfo={billInfo} />
                       </Route>
                     );
                   })

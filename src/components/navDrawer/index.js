@@ -1,3 +1,4 @@
+import './style.css';
 import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
 import Hidden from '@material-ui/core/Hidden';
@@ -8,6 +9,7 @@ import { useTheme } from '@material-ui/core/styles';
 import { useContext } from 'react';
 import DrawerContext from '../../contexts/drawerContext';
 import useStyles from '../../customHooks/useStyles';
+import { Link } from 'react-router-dom';
 
 function NavDrawer (props) {
   const { window, billsInfo } = props;
@@ -32,9 +34,11 @@ function NavDrawer (props) {
       <Divider />
       <List>
         {Object.values(billsInfo).map((billInfo, index) => (
-          <ListItem button key={billInfo.id}>
-            <ListItemText primary={billInfo.name} />
-          </ListItem>
+          <Link className="drawerLink" to={`/${billInfo.id}`}>
+            <ListItem button key={billInfo.id}>
+              <ListItemText primary={billInfo.name} />
+            </ListItem>
+          </Link>
         ))}
       </List>
     </div>
