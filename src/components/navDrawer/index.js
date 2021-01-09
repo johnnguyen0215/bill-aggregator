@@ -25,15 +25,26 @@ function NavDrawer (props) {
     <div>
       <div className={classes.toolbar} />
       <List>
-        {['Aggregator Page', 'Bill Input Page'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemText primary={text} />
-          </ListItem>
+        {
+          [{
+            name: 'Aggregator Page',
+            id: 'aggregator-page',
+            path: '/'
+          }, {
+            name: 'Bill Input Page',
+            id: 'bill-input',
+            path: '/bill-input'
+          }].map((listItem) => (
+            <Link className="drawerLink" to={listItem.path}>
+              <ListItem button key={listItem.id}>
+                <ListItemText primary={listItem.name} />
+              </ListItem>
+            </Link>
         ))}
       </List>
       <Divider />
       <List>
-        {Object.values(billsInfo).map((billInfo, index) => (
+        {Object.values(billsInfo).map((billInfo) => (
           <Link className="drawerLink" to={`/${billInfo.id}`}>
             <ListItem button key={billInfo.id}>
               <ListItemText primary={billInfo.name} />
