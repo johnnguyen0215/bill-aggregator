@@ -7,11 +7,11 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { useTheme } from '@material-ui/core/styles';
 import { useContext } from 'react';
+import { Link } from 'react-router-dom';
 import DrawerContext from '../../contexts/drawerContext';
 import useStyles from '../../customHooks/useStyles';
-import { Link } from 'react-router-dom';
 
-function NavDrawer (props) {
+function NavDrawer(props) {
   const { window, billsInfo } = props;
   const classes = useStyles();
   const theme = useTheme();
@@ -25,21 +25,23 @@ function NavDrawer (props) {
     <div>
       <div className={classes.toolbar} />
       <List>
-        {
-          [{
+        {[
+          {
             name: 'Aggregator Page',
             id: 'aggregator-page',
-            path: '/'
-          }, {
+            path: '/',
+          },
+          {
             name: 'Bill Input Page',
             id: 'bill-input',
-            path: '/bill-input'
-          }].map((listItem) => (
-            <Link className="drawerLink" to={listItem.path}>
-              <ListItem button key={listItem.id}>
-                <ListItemText primary={listItem.name} />
-              </ListItem>
-            </Link>
+            path: '/bill-input',
+          },
+        ].map((listItem) => (
+          <Link className="drawerLink" to={listItem.path}>
+            <ListItem button key={listItem.id}>
+              <ListItemText primary={listItem.name} />
+            </ListItem>
+          </Link>
         ))}
       </List>
       <Divider />
@@ -55,7 +57,8 @@ function NavDrawer (props) {
     </div>
   );
 
-  const container = window !== undefined ? () => window().document.body : undefined;
+  const container =
+    window !== undefined ? () => window().document.body : undefined;
 
   return (
     <>
