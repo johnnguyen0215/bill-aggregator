@@ -3,48 +3,42 @@ const isDateInRange = (dateStr) => {
 
   const lastMonth = new Date();
   lastMonth.setDate(1);
-  lastMonth.setMonth(lastMonth.getMonth()-1);
+  lastMonth.setMonth(lastMonth.getMonth() - 1);
 
   const date = new Date(dateStr);
 
   return date <= today && date >= lastMonth;
-}
+};
 
-const queryBuilder = (email, subject, afterDate, beforeDate) => {
-  return `from:${email} AND subject:${subject}`;
-}
+const queryBuilder = (email, subject) => `from:${email} AND subject:${subject}`;
 
 export const getMessageBody = async (gapi, billInfo) => {
-  console.log(billInfo);
-
-  const response = await gapi.client.gmail.users.messages.list(
-    {
-      userId: "me",
-      maxResults: 10,
-      q: queryBuilder(billInfo.email, billInfo.subject)
-    }
-  );
-
-  console.log(response);
+  const response = await gapi.client.gmail.users.messages.list({
+    userId: 'me',
+    maxResults: 10,
+    q: queryBuilder(billInfo.email, billInfo.subject),
+  });
 
   const responseObject = JSON.parse(response.body);
 
   const messageId = responseObject.messages[0].id;
-  const messageResponse = await gapi.client.gmail.users.messages.get({ userId: "me", id: messageId });
+  const messageResponse = await gapi.client.gmail.users.messages.get({
+    userId: 'me',
+    id: messageId,
+  });
 
   const messageResponseBody = JSON.parse(messageResponse.body);
 
-  const dateHeader = messageResponseBody.payload.headers.find((header) => {
-    return header.name === 'Date';
-  });
+  const dateHeader = messageResponseBody.payload.headers.find(
+    (header) => header.name === 'Date'
+  );
 
   const date = dateHeader.value;
 
   if (isDateInRange(date)) {
-    console.log('date is in range');
-    const htmlPart = messageResponseBody?.payload?.parts.find((part) => {
-      return part.mimeType === 'text/html';
-    })
+    const htmlPart = messageResponseBody?.payload?.parts.find(
+      (part) => part.mimeType === 'text/html'
+    );
 
     const partData = htmlPart.body.data;
 
@@ -54,4 +48,4 @@ export const getMessageBody = async (gapi, billInfo) => {
   }
 
   return false;
-}
+};

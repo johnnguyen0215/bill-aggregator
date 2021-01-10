@@ -26,7 +26,13 @@ function NavBar(props) {
         <div className="buttonContainer">
           {isSignedIn !== null &&
             (!isSignedIn ? (
-              <div id="google-signin-button" onClick={handleSignin} />
+              <div
+                role="button"
+                tabIndex="0"
+                id="google-signin-button"
+                onClick={handleSignin}
+                onKeyDown={handleSignin}
+              />
             ) : (
               <Button
                 className="signoutButton"

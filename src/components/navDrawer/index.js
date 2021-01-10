@@ -37,7 +37,11 @@ function NavDrawer(props) {
             path: '/bill-input',
           },
         ].map((listItem) => (
-          <Link className="drawerLink" to={listItem.path}>
+          <Link
+            className="drawerLink"
+            to={listItem.path}
+            key={`listitem-${listItem.id}`}
+          >
             <ListItem button key={listItem.id}>
               <ListItemText primary={listItem.name} />
             </ListItem>
@@ -47,7 +51,11 @@ function NavDrawer(props) {
       <Divider />
       <List>
         {Object.values(billsInfo).map((billInfo) => (
-          <Link className="drawerLink" to={`/${billInfo.id}`}>
+          <Link
+            className="drawerLink"
+            to={`/${billInfo.id}`}
+            key={`bill-link-${billInfo.id}`}
+          >
             <ListItem button key={billInfo.id}>
               <ListItemText primary={billInfo.name} />
             </ListItem>

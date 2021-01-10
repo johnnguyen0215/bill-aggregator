@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef } from 'react';
 import { Button, TextField } from '@material-ui/core';
 import { getMessageBody } from '../../shared/messages';
 import LoadingContext from '../../contexts/loadingContext';
@@ -7,55 +7,44 @@ function AggregatorPage(props) {
   const { gapi, isSignedIn, billsInfo } = props;
 
   const [totalBill, setTotalBill] = useState(0);
+  const [manualBills, setManualBills] = useState({});
+  const [manualAmount, setManualAmount] = useState(0);
   const [manualInputValue, setManualInputValue] = useState();
-  const [billAmounts, setBillAmounts] = useState([]);
+  const billAmounts = useRef({});
   const loadingContext = useContext(LoadingContext);
 
   const handleInputOnChange = async (event) => {
     setManualInputValue(event.target.value);
   };
 
-  const handleInputKeydown = async (event) => {
-    if (event.key === 'Enter') {
-      setTotalBill(parseFloat(totalBill) + parseFloat(manualInputValue));
+  const getBillAmount = async (billInfo) => {
+    const messageBody = await getMessageBody(gapi, billInfo);
+
+    if (messageBody) {
+      const billAmount = parseFloat(
+        messageBody.match(/\$\s*\d*.\d{2}/)[0].slice(1)
+      );
+
+      billAmounts.current[billInfo.id] = billAmount;
     }
   };
 
   const handleGetTotalBill = async () => {
     loadingContext.setPending(true);
 
-    let totalBillAmount = 0;
-
-    const bills = [];
-
-    const values = Object.values(billsInfo);
-
-    const getTotalPromise = Object.values(billsInfo).map(
-      (billInfo) => new Promise((resolve, reject) => {})
+    const getAmountsPromise = Object.values(billsInfo).map((billInfo) =>
+      getBillAmount(billInfo)
     );
 
-    for (let i = 0; i < values.length; i++) {
-      const billInfo = values[i];
+    await Promise.all(getAmountsPromise);
 
-      const messageBody = await getMessageBody(gapi, billInfo);
+    const totalBillAmount = Object.values(billAmounts.current).reduce(
+      (acc, amount) => acc + amount,
+      0
+    );
 
-      if (messageBody) {
-        const billAmount = parseFloat(
-          messageBody.match(/\$\s*\d*.\d{2}/)[0].slice(1)
-        );
-
-        bills.push({
-          id: billInfo.id,
-          amount: billAmount,
-        });
-
-        totalBillAmount += billAmount;
-      }
-    }
-
-    setBillAmounts(billAmounts);
+    setTotalBill(totalBillAmount);
     loadingContext.setPending(false);
-    setTotalBill(totalBill + totalBillAmount);
   };
 
   return (
@@ -73,7 +62,7 @@ function AggregatorPage(props) {
             </Button>
             <div className="manualInput">
               <div className="inputContainer">
-                <label htmlFor="manualInputField">Manual Input: $</label>
+                <span>Bill Name: $</span>
                 <TextField
                   id="manualInputField"
                   onChange={handleInputOnChange}
@@ -85,11 +74,7 @@ function AggregatorPage(props) {
               <div className="manualInputBtnContainer">
                 <Button
                   variant="contained"
-                  onClick={() =>
-                    setTotalBill(
-                      parseFloat(manualInputValue) + parseFloat(totalBill)
-                    )
-                  }
+                  onClick={handleManualInputSubmit}
                   color="primary"
                 >
                   Submit
@@ -98,7 +83,8 @@ function AggregatorPage(props) {
                   variant="contained"
                   onClick={() => {
                     setTotalBill(0);
-                    setBillAmounts([]);
+
+                    billAmounts.current = {};
                   }}
                   color="primary"
                 >
@@ -109,25 +95,25 @@ function AggregatorPage(props) {
           </>
         )}
       </div>
-      {!loadingContext.pending && billAmounts && billAmounts.length > 0 && (
-        <div className="billsInfo">
-          {billAmounts &&
-            billAmounts.map((billAmount) => {
-              const billInfo = billsInfo[billAmount.id];
+      {!loadingContext.pending &&
+        Object.values(billAmounts.current).length > 0 && (
+          <div className="billsInfo">
+            {Object.values(billsInfo).map((billInfo) => {
+              const billAmount = billAmounts.current[billInfo.id];
 
               return (
-                <div className="billInfoContainer">
-                  <label className="billInfoName">{billInfo.name}: </label>
-                  <span>${billAmount.amount}</span>
+                <div className="billInfoContainer" key={billInfo.id}>
+                  <span className="billInfoName">{billInfo.name}: </span>
+                  <span>${billAmount}</span>
                 </div>
               );
             })}
-          <div className="billsInfoContainer">
-            <label className="billsInfoName">Total: </label>
-            <span>{totalBill ? `$${totalBill}` : 'No bills'}</span>
+            <div className="billsInfoContainer">
+              <span className="billsInfoName">Total: </span>
+              <span>{totalBill ? `$${totalBill}` : 'No bills'}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </>
   );
 }

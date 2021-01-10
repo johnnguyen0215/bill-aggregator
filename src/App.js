@@ -49,8 +49,8 @@ function App() {
       scope: 'https://www.googleapis.com/auth/gmail.readonly',
     });
 
-    gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => {
-      setIsSignedIn(isSignedIn);
+    gapi.auth2.getAuthInstance().isSignedIn.listen((signedIn) => {
+      setIsSignedIn(signedIn);
       setPending(false);
     });
 
@@ -121,7 +121,10 @@ function App() {
                     />
                   </Route>
                   {Object.values(billsInfo.current).map((billInfo) => (
-                    <Route path={`/${billInfo.id}`}>
+                    <Route
+                      path={`/${billInfo.id}`}
+                      key={`route-${billInfo.id}`}
+                    >
                       <BillPage gapi={gapi} billInfo={billInfo} />
                     </Route>
                   ))}
