@@ -6,26 +6,23 @@ import LoadingContext from '../../contexts/loadingContext';
 function AggregatorPage(props) {
   const { gapi, isSignedIn, billsInfo } = props;
 
+  const [billName, setBillName] = useState('');
+  const [billAmount, setBillAmount] = useState('');
+
   const [totalBill, setTotalBill] = useState(0);
   const [manualBills, setManualBills] = useState({});
-  const [manualAmount, setManualAmount] = useState(0);
-  const [manualInputValue, setManualInputValue] = useState();
   const billAmounts = useRef({});
   const loadingContext = useContext(LoadingContext);
-
-  const handleInputOnChange = async (event) => {
-    setManualInputValue(event.target.value);
-  };
 
   const getBillAmount = async (billInfo) => {
     const messageBody = await getMessageBody(gapi, billInfo);
 
     if (messageBody) {
-      const billAmount = parseFloat(
+      const amount = parseFloat(
         messageBody.match(/\$\s*\d*.\d{2}/)[0].slice(1)
       );
 
-      billAmounts.current[billInfo.id] = billAmount;
+      billAmounts.current[billInfo.id] = amount;
     }
   };
 
@@ -47,6 +44,15 @@ function AggregatorPage(props) {
     loadingContext.setPending(false);
   };
 
+  const handleManualInputSubmit = () => {
+    const manualAmounts = {
+      ...manualBills,
+      [billName]: billAmount,
+    };
+
+    setManualBills(manualAmounts);
+  };
+
   return (
     <>
       <h1>Bill Aggregator</h1>
@@ -62,12 +68,22 @@ function AggregatorPage(props) {
             </Button>
             <div className="manualInput">
               <div className="inputContainer">
-                <span>Bill Name: $</span>
+                <span>Bill Name: </span>
                 <TextField
-                  id="manualInputField"
-                  onChange={handleInputOnChange}
-                  onKeyDown={handleInputKeydown}
-                  value={manualInputValue}
+                  id="manualBillName"
+                  onChange={(event) => {
+                    setBillName(event.target.value);
+                  }}
+                  value={billName}
+                  type="text"
+                />
+                <span>Amount: </span>
+                <TextField
+                  id="manualBillAmount"
+                  onChange={(event) => {
+                    setBillAmount(parseFloat(event.target.value));
+                  }}
+                  value={billAmount}
                   type="number"
                 />
               </div>
@@ -99,12 +115,12 @@ function AggregatorPage(props) {
         Object.values(billAmounts.current).length > 0 && (
           <div className="billsInfo">
             {Object.values(billsInfo).map((billInfo) => {
-              const billAmount = billAmounts.current[billInfo.id];
+              const amount = billAmounts.current[billInfo.id];
 
               return (
                 <div className="billInfoContainer" key={billInfo.id}>
                   <span className="billInfoName">{billInfo.name}: </span>
-                  <span>${billAmount}</span>
+                  <span>${amount}</span>
                 </div>
               );
             })}
