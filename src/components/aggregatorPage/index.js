@@ -1,19 +1,23 @@
-import { useContext, useState, useRef } from 'react';
-import { Button, TextField } from '@material-ui/core';
+import { useContext, useState } from 'react';
+import { Button, Paper, TextField, Fab } from '@material-ui/core';
+import { snakeCase } from 'snake-case';
+import BackspaceIcon from '@material-ui/icons/Backspace';
 import { getMessageBody } from '../../shared/messages';
 import LoadingContext from '../../contexts/loadingContext';
 import './style.css';
+import BillsContext from '../../contexts/billsContext';
 
 function AggregatorPage(props) {
-  const { gapi, isSignedIn, billsInfo } = props;
+  const { gapi, isSignedIn } = props;
 
   const [billName, setBillName] = useState('');
   const [billAmount, setBillAmount] = useState('');
+  const [splitValue, setSplitValue] = useState('');
 
-  const [totalBill, setTotalBill] = useState(0);
-  const [manualBills, setManualBills] = useState({});
-  const billAmounts = useRef({});
   const loadingContext = useContext(LoadingContext);
+  const billsContext = useContext(BillsContext);
+
+  const { billsInfo } = billsContext;
 
   const getBillAmount = async (billInfo) => {
     const messageBody = await getMessageBody(gapi, billInfo);
@@ -23,35 +27,66 @@ function AggregatorPage(props) {
         messageBody.match(/\$\s*\d*.\d{2}/)[0].slice(1)
       );
 
-      billAmounts.current[billInfo.id] = amount;
+      billsInfo[billInfo.id].amount = amount;
     }
   };
+
+  const getBillTotal = (bills) =>
+    Object.values(bills).reduce((acc, billInfo) => {
+      if (billInfo.amount !== undefined) {
+        return acc + billInfo.amount;
+      }
+
+      return acc;
+    }, 0);
 
   const handleGetTotalBill = async () => {
     loadingContext.setPending(true);
 
-    const getAmountsPromise = Object.values(billsInfo).map((billInfo) =>
-      getBillAmount(billInfo)
-    );
+    const getAmountsPromise = Object.values(billsInfo)
+      .filter((billInfo) => billInfo.type === 'email')
+      .map((billInfo) => getBillAmount(billInfo));
 
     await Promise.all(getAmountsPromise);
 
-    const totalBillAmount = Object.values(billAmounts.current).reduce(
-      (acc, amount) => acc + amount,
-      0
-    );
+    billsContext.setTotal(getBillTotal(billsInfo));
 
-    setTotalBill(totalBillAmount);
     loadingContext.setPending(false);
   };
 
   const handleManualInputSubmit = () => {
-    const manualAmounts = {
-      ...manualBills,
-      [billName]: billAmount,
+    const billId = snakeCase(billName);
+
+    const updatedBillsInfo = {
+      ...billsInfo,
+      [billId]: {
+        id: billId,
+        name: billName,
+        amount: billAmount,
+      },
     };
 
-    setManualBills(manualAmounts);
+    const billTotal = getBillTotal(updatedBillsInfo);
+
+    billsContext.setBillsInfo(updatedBillsInfo);
+    billsContext.setTotal(billTotal);
+
+    setBillAmount('');
+    setBillName('');
+  };
+
+  const removeBill = (billId) => {
+    const updatedBills = {};
+
+    const filteredKeys = Object.keys(billsInfo).filter(
+      (billKey) => billKey !== billId
+    );
+
+    filteredKeys.forEach((key) => {
+      updatedBills[key] = billsInfo[key];
+    });
+
+    return updatedBills;
   };
 
   return (
@@ -95,47 +130,111 @@ function AggregatorPage(props) {
                   variant="contained"
                   onClick={handleManualInputSubmit}
                   color="primary"
+                  disabled={!billName || !billAmount}
                 >
-                  Submit
+                  Add Bill
                 </Button>
               </div>
             </div>
           </>
         )}
       </div>
-      {!loadingContext.pending &&
-        Object.values(billAmounts.current).length > 0 && (
-          <div className="billsInfo">
-            {Object.values(billsInfo).map((billInfo) => {
-              const amount = billAmounts.current[billInfo.id];
-
-              return (
-                <div className="billInfoContainer" key={billInfo.id}>
+      {!loadingContext.pending && billsContext.total !== null && (
+        <ul className="billList">
+          {Object.values(billsInfo)
+            .filter((billInfo) => billInfo.amount !== undefined)
+            .map((billInfo) => (
+              <li className="billItem" key={billInfo.id}>
+                <Paper className="billInfoContainer" square>
                   <span className="billInfoName">{billInfo.name}: </span>
-                  <span>${amount}</span>
-                </div>
-              );
-            })}
-            <div className="billsInfoContainer">
-              <span className="billsInfoName">Total: </span>
-              <span>{totalBill ? `$${totalBill}` : 'No bills'}</span>
-            </div>
-          </div>
-        )}
-      {!loadingContext.pending &&
-        Object.values(billAmounts.current).length > 0 && (
-          <Button
-            variant="contained"
-            onClick={() => {
-              setTotalBill(0);
+                  <span>${billInfo.amount.toFixed(2)}</span>
+                  <Fab
+                    className="removeButton"
+                    size="small"
+                    color="secondary"
+                    onClick={() => {
+                      let updatedBills = {};
 
-              billAmounts.current = {};
-            }}
-            color="primary"
-          >
-            Clear
-          </Button>
-        )}
+                      if (billInfo.type !== 'email') {
+                        updatedBills = removeBill(billInfo.id);
+                      } else {
+                        updatedBills = {
+                          ...billsInfo,
+                          [billInfo.id]: {
+                            ...billsInfo[billInfo.id],
+                            amount: undefined,
+                          },
+                        };
+                      }
+
+                      billsContext.setBillsInfo(updatedBills);
+                      billsContext.setTotal(getBillTotal(updatedBills));
+                    }}
+                  >
+                    <BackspaceIcon fontSize="small" />
+                  </Fab>
+                </Paper>
+              </li>
+            ))}
+          <div className="billsInfoContainer">
+            <div>
+              <h2>
+                Total:{' '}
+                {billsContext.total > 0
+                  ? `$${billsContext.total.toFixed(2)}`
+                  : 'No bills'}
+              </h2>
+            </div>
+            <div className="inputContainer">
+              <span className="manualInputLabel">Split By: </span>
+              <TextField
+                id="splitByField"
+                type="number"
+                value={splitValue}
+                onChange={(event) => {
+                  if (event.target.value) {
+                    setSplitValue(parseInt(event.target.value, 10));
+                  } else {
+                    setSplitValue('');
+                  }
+                }}
+              />
+            </div>
+            {splitValue && splitValue > 0 && (
+              <div>
+                <h2>
+                  Split Total: ${(billsContext.total / splitValue).toFixed(2)}
+                </h2>
+              </div>
+            )}
+          </div>
+        </ul>
+      )}
+      {!loadingContext.pending && billsContext.total > 0 && (
+        <Button
+          variant="contained"
+          onClick={() => {
+            const filteredKeys = Object.keys(billsInfo).filter(
+              (key) => billsInfo[key].type === 'email'
+            );
+
+            const updatedBills = {};
+
+            filteredKeys.forEach((key) => {
+              updatedBills[key] = {
+                ...billsInfo[key],
+                amount: undefined,
+              };
+            });
+
+            billsContext.setBillsInfo(updatedBills);
+            billsContext.setTotal(null);
+          }}
+          color="primary"
+        >
+          Clear
+        </Button>
+      )}
     </>
   );
 }

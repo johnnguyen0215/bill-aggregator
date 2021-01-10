@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Container, Backdrop, CircularProgress } from '@material-ui/core';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import AggregatorPage from './components/aggregatorPage/index';
@@ -9,6 +9,7 @@ import DrawerContext from './contexts/drawerContext';
 import NavBar from './components/navBar/index';
 import BillPage from './components/billPage/index';
 import LoadingContext from './contexts/loadingContext';
+import BillsContext from './contexts/billsContext';
 
 const { gapi } = window;
 
@@ -16,26 +17,30 @@ function App() {
   const [isSignedIn, setIsSignedIn] = useState(null);
   const [pending, setPending] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [total, setTotal] = useState(null);
   const classes = useStyles();
 
-  const billsInfo = useRef({
-    'socal-gas': {
+  const [billsInfo, setBillsInfo] = useState({
+    socal_gas: {
       name: 'Socal Gas',
-      id: 'socal-gas',
+      id: 'socal_gas',
       email: 'customerservice@socalgas.com',
       subject: 'Your Bill from Southern California Gas Company',
+      type: 'email',
     },
-    'socal-edison': {
+    socal_edison: {
       name: 'Socal Edison',
-      id: 'socal-edison',
+      id: 'socal_edison',
       email: 'ibp3@scewebservices.com',
       subject: 'SCE Bill is Ready to View',
+      type: 'email',
     },
     geico: {
       name: 'Geico',
       id: 'geico',
       email: 'geico@email1.geico.com',
       subject: 'consider reviewing this pending GEICO payment',
+      type: 'email',
     },
   });
 
@@ -87,53 +92,58 @@ function App() {
 
   return (
     <Router>
-      <LoadingContext.Provider
+      <BillsContext.Provider
         value={{
-          setPending,
-          pending,
+          setBillsInfo,
+          billsInfo,
+          total,
+          setTotal,
         }}
       >
-        <DrawerContext.Provider
+        <LoadingContext.Provider
           value={{
-            setDrawerOpen,
-            drawerOpen,
+            setPending,
+            pending,
           }}
         >
-          <Backdrop className="backdrop" open={pending}>
-            <CircularProgress color="secondary" />
-          </Backdrop>
-          <div className="App">
-            <NavBar
-              isSignedIn={isSignedIn}
-              handleSignin={handleSignin}
-              handleSignout={handleSignout}
-            />
-            <NavDrawer billsInfo={billsInfo.current} />
-            <main className={classes.content}>
-              <Container>
-                <div className={classes.toolbar} />
-                <Switch>
-                  <Route exact path="/">
-                    <AggregatorPage
-                      isSignedIn={isSignedIn}
-                      billsInfo={billsInfo.current}
-                      gapi={gapi}
-                    />
-                  </Route>
-                  {Object.values(billsInfo.current).map((billInfo) => (
-                    <Route
-                      path={`/${billInfo.id}`}
-                      key={`route-${billInfo.id}`}
-                    >
-                      <BillPage gapi={gapi} billInfo={billInfo} />
+          <DrawerContext.Provider
+            value={{
+              setDrawerOpen,
+              drawerOpen,
+            }}
+          >
+            <Backdrop className="backdrop" open={pending}>
+              <CircularProgress color="secondary" />
+            </Backdrop>
+            <div className="App">
+              <NavBar
+                isSignedIn={isSignedIn}
+                handleSignin={handleSignin}
+                handleSignout={handleSignout}
+              />
+              <NavDrawer />
+              <main className={classes.content}>
+                <Container>
+                  <div className={classes.toolbar} />
+                  <Switch>
+                    <Route exact path="/">
+                      <AggregatorPage isSignedIn={isSignedIn} gapi={gapi} />
                     </Route>
-                  ))}
-                </Switch>
-              </Container>
-            </main>
-          </div>
-        </DrawerContext.Provider>
-      </LoadingContext.Provider>
+                    {Object.values(billsInfo).map((billInfo) => (
+                      <Route
+                        path={`/${billInfo.id}`}
+                        key={`route-${billInfo.id}`}
+                      >
+                        <BillPage gapi={gapi} billInfo={billInfo} />
+                      </Route>
+                    ))}
+                  </Switch>
+                </Container>
+              </main>
+            </div>
+          </DrawerContext.Provider>
+        </LoadingContext.Provider>
+      </BillsContext.Provider>
     </Router>
   );
 }

@@ -9,13 +9,17 @@ import { useTheme } from '@material-ui/core/styles';
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import DrawerContext from '../../contexts/drawerContext';
+import BillsContext from '../../contexts/billsContext';
 import useStyles from '../../customHooks/useStyles';
 
 function NavDrawer(props) {
-  const { window, billsInfo } = props;
+  const { window } = props;
   const classes = useStyles();
   const theme = useTheme();
   const drawerContext = useContext(DrawerContext);
+  const billsContext = useContext(BillsContext);
+
+  const { billsInfo } = billsContext;
 
   const handleDrawerToggle = () => {
     drawerContext.setDrawerOpen(!drawerContext.drawerOpen);
@@ -50,17 +54,19 @@ function NavDrawer(props) {
       </List>
       <Divider />
       <List>
-        {Object.values(billsInfo).map((billInfo) => (
-          <Link
-            className="drawerLink"
-            to={`/${billInfo.id}`}
-            key={`bill-link-${billInfo.id}`}
-          >
-            <ListItem button key={billInfo.id}>
-              <ListItemText primary={billInfo.name} />
-            </ListItem>
-          </Link>
-        ))}
+        {Object.values(billsInfo)
+          .filter((billInfo) => billInfo.type === 'email')
+          .map((billInfo) => (
+            <Link
+              className="drawerLink"
+              to={`/${billInfo.id}`}
+              key={`bill-link-${billInfo.id}`}
+            >
+              <ListItem button key={billInfo.id}>
+                <ListItemText primary={billInfo.name} />
+              </ListItem>
+            </Link>
+          ))}
       </List>
     </div>
   );

@@ -1,8 +1,24 @@
 .manualInputLabel {
   font-weight: bold;
-  margin-right: 5px;
+  margin-right: 10px;
 }
 
 .MuiFormControl-root.manualInputField {
   margin-right: 20px;
+}
+
+.MuiPaper-root.billInfoContainer {
+  padding: 20px;
+  margin-bottom: 10px;
+  width: auto;
+  display: inline-block;
+}
+
+.billList {
+  list-style: none;
+  padding-left: 0;
+}
+
+.MuiFab-root.removeButton {
+  margin-left: 20px;
 }

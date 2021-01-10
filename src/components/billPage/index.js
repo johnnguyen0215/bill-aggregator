@@ -11,8 +11,6 @@ function BillPage(props) {
 
   useEffect(() => {
     const fetchMessage = async () => {
-      loadingContext.setPending(true);
-
       const messageBody = await getMessageBody(gapi, billInfo);
 
       if (messageBody) {
@@ -27,16 +25,20 @@ function BillPage(props) {
         setMessage('No Bill Found');
         setAmount(null);
       }
-
-      loadingContext.setPending(false);
     };
 
     fetchMessage();
-  }, [billInfo, gapi, setMessage, setAmount, loadingContext]);
+  }, [billInfo, gapi]);
+
+  useEffect(() => {
+    if (message && amount && loadingContext.pending) {
+      loadingContext.setPending(false);
+    }
+  });
 
   return (
     <div className="billPage">
-      {amount !== null && <h1 className="totalHeader">Total: ${amount}</h1>}
+      {amount !== null && <h1 className="totalHeader">Amount: ${amount}</h1>}
       <div
         className="billHtml"
         dangerouslySetInnerHTML={{
