@@ -1,0 +1,8 @@
+.manualInputLabel {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.MuiFormControl-root.manualInputField {
+  margin-right: 20px;
+}

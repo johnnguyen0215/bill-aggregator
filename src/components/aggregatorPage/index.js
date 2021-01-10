@@ -2,6 +2,7 @@ import { useContext, useState, useRef } from 'react';
 import { Button, TextField } from '@material-ui/core';
 import { getMessageBody } from '../../shared/messages';
 import LoadingContext from '../../contexts/loadingContext';
+import './style.css';
 
 function AggregatorPage(props) {
   const { gapi, isSignedIn, billsInfo } = props;
@@ -68,8 +69,9 @@ function AggregatorPage(props) {
             </Button>
             <div className="manualInput">
               <div className="inputContainer">
-                <span>Bill Name: </span>
+                <span className="manualInputLabel">Bill Name: </span>
                 <TextField
+                  className="manualInputField"
                   id="manualBillName"
                   onChange={(event) => {
                     setBillName(event.target.value);
@@ -77,8 +79,9 @@ function AggregatorPage(props) {
                   value={billName}
                   type="text"
                 />
-                <span>Amount: </span>
+                <span className="manualInputLabel">Amount: $</span>
                 <TextField
+                  className="manualInputField"
                   id="manualBillAmount"
                   onChange={(event) => {
                     setBillAmount(parseFloat(event.target.value));
@@ -94,17 +97,6 @@ function AggregatorPage(props) {
                   color="primary"
                 >
                   Submit
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    setTotalBill(0);
-
-                    billAmounts.current = {};
-                  }}
-                  color="primary"
-                >
-                  Clear
                 </Button>
               </div>
             </div>
@@ -129,6 +121,20 @@ function AggregatorPage(props) {
               <span>{totalBill ? `$${totalBill}` : 'No bills'}</span>
             </div>
           </div>
+        )}
+      {!loadingContext.pending &&
+        Object.values(billAmounts.current).length > 0 && (
+          <Button
+            variant="contained"
+            onClick={() => {
+              setTotalBill(0);
+
+              billAmounts.current = {};
+            }}
+            color="primary"
+          >
+            Clear
+          </Button>
         )}
     </>
   );
