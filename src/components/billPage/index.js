@@ -6,11 +6,13 @@ function BillPage(props) {
   const { billInfo, gapi } = props;
   const loadingContext = useContext(LoadingContext);
 
+  const [emailFetched, setEmailFetched] = useState(false);
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState(null);
 
   useEffect(() => {
     const fetchMessage = async () => {
+      loadingContext.setPending(true);
       const messageBody = await getMessageBody(gapi, billInfo);
 
       if (messageBody) {
@@ -25,16 +27,15 @@ function BillPage(props) {
         setMessage('No Bill Found');
         setAmount(null);
       }
+
+      setEmailFetched(true);
+      loadingContext.setPending(false);
     };
 
-    fetchMessage();
-  }, [billInfo, gapi]);
-
-  useEffect(() => {
-    if (message && amount && loadingContext.pending) {
-      loadingContext.setPending(false);
+    if (!loadingContext.pending && !emailFetched) {
+      fetchMessage();
     }
-  });
+  }, [billInfo, gapi, loadingContext]);
 
   return (
     <div className="billPage">

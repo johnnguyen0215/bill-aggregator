@@ -167,8 +167,10 @@ function AggregatorPage(props) {
                         };
                       }
 
+                      const billTotal = getBillTotal(updatedBills);
+
                       billsContext.setBillsInfo(updatedBills);
-                      billsContext.setTotal(getBillTotal(updatedBills));
+                      billsContext.setTotal(billTotal);
                     }}
                   >
                     <BackspaceIcon fontSize="small" />
@@ -177,30 +179,29 @@ function AggregatorPage(props) {
               </li>
             ))}
           <div className="billsInfoContainer">
-            <div>
-              <h2>
-                Total:{' '}
-                {billsContext.total > 0
-                  ? `$${billsContext.total.toFixed(2)}`
-                  : 'No bills'}
-              </h2>
-            </div>
-            <div className="inputContainer">
-              <span className="manualInputLabel">Split By: </span>
-              <TextField
-                id="splitByField"
-                type="number"
-                value={splitValue}
-                onChange={(event) => {
-                  if (event.target.value) {
-                    setSplitValue(parseInt(event.target.value, 10));
-                  } else {
-                    setSplitValue('');
-                  }
-                }}
-              />
-            </div>
-            {splitValue && splitValue > 0 && (
+            {billsContext.total > 0 && (
+              <div>
+                <h2>Total: ${billsContext.total.toFixed(2)}</h2>
+              </div>
+            )}
+            {billsContext.total > 0 && (
+              <div className="inputContainer">
+                <span className="manualInputLabel">Split By: </span>
+                <TextField
+                  id="splitByField"
+                  type="number"
+                  value={splitValue}
+                  onChange={(event) => {
+                    if (event.target.value) {
+                      setSplitValue(parseInt(event.target.value, 10));
+                    } else {
+                      setSplitValue('');
+                    }
+                  }}
+                />
+              </div>
+            )}
+            {splitValue && splitValue > 0 && billsContext.total > 0 && (
               <div>
                 <h2>
                   Split Total: ${(billsContext.total / splitValue).toFixed(2)}

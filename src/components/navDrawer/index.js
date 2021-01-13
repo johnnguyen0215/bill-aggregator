@@ -32,13 +32,13 @@ function NavDrawer(props) {
         {[
           {
             name: 'Aggregator Page',
-            id: 'aggregator-page',
+            id: 'aggregator_page',
             path: '/',
           },
           {
             name: 'Bill Input Page',
-            id: 'bill-input',
-            path: '/bill-input',
+            id: 'bill_input',
+            path: '/bill_input',
           },
         ].map((listItem) => (
           <Link

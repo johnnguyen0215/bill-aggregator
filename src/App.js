@@ -10,12 +10,14 @@ import NavBar from './components/navBar/index';
 import BillPage from './components/billPage/index';
 import LoadingContext from './contexts/loadingContext';
 import BillsContext from './contexts/billsContext';
+import BillInputPage from './components/billInputPage/index';
 
 const { gapi } = window;
 
 function App() {
   const [isSignedIn, setIsSignedIn] = useState(null);
   const [pending, setPending] = useState(false);
+  const [gmailLoading, setGmailLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [total, setTotal] = useState(null);
   const classes = useStyles();
@@ -60,6 +62,7 @@ function App() {
     });
 
     setIsSignedIn(gapi.auth2.getAuthInstance().isSignedIn.get());
+    setGmailLoading(false);
   }, []);
 
   const handleSignin = async () => {
@@ -112,35 +115,40 @@ function App() {
               drawerOpen,
             }}
           >
-            <Backdrop className="backdrop" open={pending}>
+            <Backdrop className="backdrop" open={pending || gmailLoading}>
               <CircularProgress color="secondary" />
             </Backdrop>
-            <div className="App">
-              <NavBar
-                isSignedIn={isSignedIn}
-                handleSignin={handleSignin}
-                handleSignout={handleSignout}
-              />
-              <NavDrawer />
-              <main className={classes.content}>
-                <Container>
-                  <div className={classes.toolbar} />
-                  <Switch>
-                    <Route exact path="/">
-                      <AggregatorPage isSignedIn={isSignedIn} gapi={gapi} />
-                    </Route>
-                    {Object.values(billsInfo).map((billInfo) => (
-                      <Route
-                        path={`/${billInfo.id}`}
-                        key={`route-${billInfo.id}`}
-                      >
-                        <BillPage gapi={gapi} billInfo={billInfo} />
+            {!gmailLoading && (
+              <div className="App">
+                <NavBar
+                  isSignedIn={isSignedIn}
+                  handleSignin={handleSignin}
+                  handleSignout={handleSignout}
+                />
+                <NavDrawer />
+                <main className={classes.content}>
+                  <Container>
+                    <div className={classes.toolbar} />
+                    <Switch>
+                      <Route exact path="/">
+                        <AggregatorPage isSignedIn={isSignedIn} gapi={gapi} />
                       </Route>
-                    ))}
-                  </Switch>
-                </Container>
-              </main>
-            </div>
+                      <Route path="/bill_input">
+                        <BillInputPage />
+                      </Route>
+                      {Object.values(billsInfo).map((billInfo) => (
+                        <Route
+                          path={`/${billInfo.id}`}
+                          key={`route-${billInfo.id}`}
+                        >
+                          <BillPage gapi={gapi} billInfo={billInfo} />
+                        </Route>
+                      ))}
+                    </Switch>
+                  </Container>
+                </main>
+              </div>
+            )}
           </DrawerContext.Provider>
         </LoadingContext.Provider>
       </BillsContext.Provider>
