@@ -11,6 +11,8 @@ function NavBar(props) {
 
   const classes = useStyles();
 
+  console.log('isSignedIn', isSignedIn);
+
   return (
     <AppBar position="fixed" className={classes.appBar}>
       <Toolbar className="toolbar">
@@ -24,25 +26,24 @@ function NavBar(props) {
           <MenuIcon />
         </IconButton>
         <div className="buttonContainer">
-          {isSignedIn !== null &&
-            (!isSignedIn ? (
-              <div
-                role="button"
-                tabIndex="0"
-                id="google-signin-button"
-                onClick={handleSignin}
-                onKeyDown={handleSignin}
-              />
-            ) : (
-              <Button
-                className="signoutButton"
-                variant="contained"
-                onClick={handleSignout}
-                color="secondary"
-              >
-                Sign Out
-              </Button>
-            ))}
+          {!isSignedIn ? (
+            <div
+              role="button"
+              tabIndex="0"
+              id="google-signin-button"
+              onClick={handleSignin}
+              onKeyDown={handleSignin}
+            />
+          ) : (
+            <Button
+              className="signoutButton"
+              variant="contained"
+              onClick={handleSignout}
+              color="secondary"
+            >
+              Sign Out
+            </Button>
+          )}
         </div>
       </Toolbar>
     </AppBar>
