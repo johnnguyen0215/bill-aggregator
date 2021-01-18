@@ -81,18 +81,6 @@ function App() {
     }
   }, [initGapi]);
 
-  useEffect(() => {
-    if (!isSignedIn) {
-      gapi.signin2.render('google-signin-button', {
-        scope: 'profile email',
-        width: 240,
-        height: 50,
-        longtitle: true,
-        theme: 'dark',
-      });
-    }
-  }, [isSignedIn]);
-
   return (
     <Router>
       <BillsContext.Provider
@@ -124,8 +112,9 @@ function App() {
                   isSignedIn={isSignedIn}
                   handleSignin={handleSignin}
                   handleSignout={handleSignout}
+                  gapi={gapi}
                 />
-                <NavDrawer />
+                {isSignedIn && <NavDrawer />}
                 <main className={classes.content}>
                   <Container>
                     <div className={classes.toolbar} />
