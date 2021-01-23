@@ -90,9 +90,9 @@ function AggregatorPage(props) {
   };
 
   return (
-    <>
+    <div className="aggregatorPage">
       <h1>Bill Aggregator</h1>
-      <div className="homePage">
+      <div>
         {isSignedIn && (
           <>
             <Button
@@ -138,105 +138,108 @@ function AggregatorPage(props) {
             </div>
           </>
         )}
-      </div>
-      {!loadingContext.pending && billsContext.total !== null && (
-        <ul className="billList">
-          {Object.values(billsInfo)
-            .filter((billInfo) => billInfo.amount !== undefined)
-            .map((billInfo) => (
-              <li className="billItem" key={billInfo.id}>
-                <Paper className="billInfoContainer" square>
-                  <span className="billInfoName">{billInfo.name}: </span>
-                  <span>${billInfo.amount.toFixed(2)}</span>
-                  <Fab
-                    className="removeButton"
-                    size="small"
-                    color="secondary"
-                    onClick={() => {
-                      let updatedBills = {};
+        {!loadingContext.pending && billsContext.total !== null && (
+          <>
+            <ul className="billList">
+              {Object.values(billsInfo)
+                .filter((billInfo) => billInfo.amount !== undefined)
+                .map((billInfo) => (
+                  <li className="billItem" key={billInfo.id}>
+                    <Paper className="billInfoContainer" square>
+                      <span className="billInfoName">{billInfo.name}: </span>
+                      <span>${billInfo.amount.toFixed(2)}</span>
+                      <Fab
+                        className="removeButton"
+                        size="small"
+                        color="secondary"
+                        onClick={() => {
+                          let updatedBills = {};
 
-                      if (billInfo.type !== 'email') {
-                        updatedBills = removeBill(billInfo.id);
+                          if (billInfo.type !== 'email') {
+                            updatedBills = removeBill(billInfo.id);
+                          } else {
+                            updatedBills = {
+                              ...billsInfo,
+                              [billInfo.id]: {
+                                ...billsInfo[billInfo.id],
+                                amount: undefined,
+                              },
+                            };
+                          }
+
+                          const billTotal = getBillTotal(updatedBills);
+
+                          billsContext.setBillsInfo(updatedBills);
+                          billsContext.setTotal(billTotal);
+                        }}
+                      >
+                        <BackspaceIcon fontSize="small" />
+                      </Fab>
+                    </Paper>
+                  </li>
+                ))}
+            </ul>
+            <div className="billsInfoContainer">
+              {billsContext.total > 0 && (
+                <div>
+                  <h2>Total: ${billsContext.total.toFixed(2)}</h2>
+                </div>
+              )}
+              {billsContext.total > 0 && (
+                <div className="inputContainer">
+                  <span className="manualInputLabel">Split By: </span>
+                  <TextField
+                    id="splitByField"
+                    type="number"
+                    value={splitValue}
+                    onChange={(event) => {
+                      if (event.target.value) {
+                        setSplitValue(parseInt(event.target.value, 10));
                       } else {
-                        updatedBills = {
-                          ...billsInfo,
-                          [billInfo.id]: {
-                            ...billsInfo[billInfo.id],
-                            amount: undefined,
-                          },
-                        };
+                        setSplitValue('');
                       }
-
-                      const billTotal = getBillTotal(updatedBills);
-
-                      billsContext.setBillsInfo(updatedBills);
-                      billsContext.setTotal(billTotal);
                     }}
-                  >
-                    <BackspaceIcon fontSize="small" />
-                  </Fab>
-                </Paper>
-              </li>
-            ))}
-          <div className="billsInfoContainer">
-            {billsContext.total > 0 && (
-              <div>
-                <h2>Total: ${billsContext.total.toFixed(2)}</h2>
-              </div>
-            )}
-            {billsContext.total > 0 && (
-              <div className="inputContainer">
-                <span className="manualInputLabel">Split By: </span>
-                <TextField
-                  id="splitByField"
-                  type="number"
-                  value={splitValue}
-                  onChange={(event) => {
-                    if (event.target.value) {
-                      setSplitValue(parseInt(event.target.value, 10));
-                    } else {
-                      setSplitValue('');
-                    }
-                  }}
-                />
-              </div>
-            )}
-            {splitValue && splitValue > 0 && billsContext.total > 0 && (
-              <div>
-                <h2>
-                  Split Total: ${(billsContext.total / splitValue).toFixed(2)}
-                </h2>
-              </div>
-            )}
-          </div>
-        </ul>
-      )}
-      {!loadingContext.pending && billsContext.total > 0 && (
-        <Button
-          variant="contained"
-          onClick={() => {
-            const filteredKeys = Object.keys(billsInfo).filter(
-              (key) => billsInfo[key].type === 'email'
-            );
+                  />
+                </div>
+              )}
+              {splitValue && splitValue > 0 && billsContext.total > 0 && (
+                <div>
+                  <h2>
+                    Split Total: ${(billsContext.total / splitValue).toFixed(2)}
+                  </h2>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+        {!loadingContext.pending && billsContext.total > 0 && (
+          <Button
+            className="clearButton"
+            variant="contained"
+            onClick={() => {
+              const filteredKeys = Object.keys(billsInfo).filter(
+                (key) => billsInfo[key].type === 'email'
+              );
 
-            const updatedBills = {};
+              const updatedBills = {};
 
-            filteredKeys.forEach((key) => {
-              updatedBills[key] = {
-                ...billsInfo[key],
-                amount: undefined,
-              };
-            });
+              filteredKeys.forEach((key) => {
+                updatedBills[key] = {
+                  ...billsInfo[key],
+                  amount: undefined,
+                };
+              });
 
-            billsContext.setBillsInfo(updatedBills);
-            billsContext.setTotal(null);
-          }}
-          color="primary"
-        >
-          Clear
-        </Button>
-      )}
-    </>
+              billsContext.setBillsInfo(updatedBills);
+              billsContext.setTotal(null);
+            }}
+            color="primary"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
 

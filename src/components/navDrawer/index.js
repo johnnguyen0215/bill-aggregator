@@ -37,8 +37,8 @@ function NavDrawer(props) {
           },
           {
             name: 'Bill Input Page',
-            id: 'bill_input',
-            path: '/bill_input',
+            id: 'bill_manager',
+            path: '/bill_manager',
           },
         ].map((listItem) => (
           <Link

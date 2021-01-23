@@ -10,7 +10,7 @@ import NavBar from './components/navBar/index';
 import BillPage from './components/billPage/index';
 import LoadingContext from './contexts/loadingContext';
 import BillsContext from './contexts/billsContext';
-import BillInputPage from './components/billInputPage/index';
+import BillManager from './components/billManager/index';
 
 const { gapi } = window;
 
@@ -122,8 +122,8 @@ function App() {
                       <Route exact path="/">
                         <AggregatorPage isSignedIn={isSignedIn} gapi={gapi} />
                       </Route>
-                      <Route path="/bill_input">
-                        <BillInputPage />
+                      <Route path="/bill_manager">
+                        <BillManager />
                       </Route>
                       {Object.values(billsInfo).map((billInfo) => (
                         <Route

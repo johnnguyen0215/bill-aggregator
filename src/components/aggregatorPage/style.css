@@ -9,9 +9,9 @@
 
 .MuiPaper-root.billInfoContainer {
   padding: 20px;
-  margin-bottom: 10px;
   width: auto;
   display: inline-block;
+  margin-bottom: 10px;
 }
 
 .billList {
@@ -19,6 +19,10 @@
   padding-left: 0;
 }
 
-.MuiFab-root.removeButton {
+.aggregatorPage .MuiFab-root.removeButton {
   margin-left: 20px;
+}
+
+.aggregatorPage .MuiButtonBase-root.clearButton {
+  margin-top: 20px;
 }
