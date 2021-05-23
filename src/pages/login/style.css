@@ -1,0 +1,27 @@
+.body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 40px;
+}
+
+.signinButton {
+  border: 0;
+  background-color: transparent;
+}
+
+.buttonContainer {
+  display: flex;
+}
+
+.intro {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 600;
+  margin-bottom: 50px;
+}
+
+.cardContainer {
+  margin-top: 200px;
+}

@@ -11,11 +11,6 @@ html {
   justify-self: flex-start;
 }
 
-.buttonContainer {
-  display: inline-block;
-  margin-left: auto;
-}
-
 .manualInput {
   margin-top: 20px;
 }

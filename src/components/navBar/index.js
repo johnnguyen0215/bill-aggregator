@@ -1,29 +1,28 @@
-import { Button, AppBar, Toolbar } from '@material-ui/core';
+import { AppBar, Toolbar, Button } from '@material-ui/core';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import useStyles from '../../customHooks/useStyles';
 import DrawerContext from '../../contexts/drawerContext';
+import LoadingContext from '../../contexts/loadingContext';
+import AuthContext from '../../contexts/authContext';
+import useGapi from '../../customHooks/useGapi';
 
-function NavBar(props) {
-  const { isSignedIn, handleSignin, handleSignout, gapi } = props;
+function NavBar() {
   const drawerContext = useContext(DrawerContext);
+  const gapi = useGapi();
+
+  const { setPending } = useContext(LoadingContext);
+  const { isSignedIn, setIsSignedIn } = useContext(AuthContext);
 
   const classes = useStyles();
-
-  useEffect(() => {
-    if (!isSignedIn) {
-      gapi.signin2.render('google-signin-button', {
-        scope: 'profile email',
-        width: 240,
-        height: 50,
-        longtitle: true,
-        theme: 'dark',
-      });
-    }
-  }, [isSignedIn]);
-
   const appBarClasses = isSignedIn ? classes.appBar : null;
+
+  const handleSignout = async () => {
+    setPending(true);
+    await gapi.auth2.getAuthInstance().signOut();
+    setIsSignedIn(false);
+  };
 
   return (
     <AppBar position="fixed" className={appBarClasses}>
@@ -37,26 +36,14 @@ function NavBar(props) {
         >
           <MenuIcon />
         </IconButton>
-        <div className="buttonContainer">
-          {!isSignedIn ? (
-            <div
-              role="button"
-              tabIndex="0"
-              id="google-signin-button"
-              onClick={handleSignin}
-              onKeyDown={handleSignin}
-            />
-          ) : (
-            <Button
-              className="signoutButton"
-              variant="contained"
-              onClick={handleSignout}
-              color="secondary"
-            >
-              Sign Out
-            </Button>
-          )}
-        </div>
+        <Button
+          className="signoutButton"
+          variant="contained"
+          onClick={handleSignout}
+          color="secondary"
+        >
+          Sign Out
+        </Button>
       </Toolbar>
     </AppBar>
   );

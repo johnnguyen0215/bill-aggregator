@@ -74,6 +74,8 @@ function NavDrawer(props) {
   const container =
     window !== undefined ? () => window().document.body : undefined;
 
+  console.log(drawerContext.drawerOpen);
+
   return (
     <>
       <nav className={classes.drawer} aria-label="mailbox folders">
@@ -91,17 +93,6 @@ function NavDrawer(props) {
             ModalProps={{
               keepMounted: true, // Better open performance on mobile.
             }}
-          >
-            {drawer}
-          </Drawer>
-        </Hidden>
-        <Hidden xsDown implementation="css">
-          <Drawer
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            variant="permanent"
-            open
           >
             {drawer}
           </Drawer>

@@ -8,8 +8,6 @@ function BillManager() {
 
   const { billsInfo } = billsContext;
 
-  console.log(billsInfo);
-
   return (
     <div className="billManager">
       <h1>Bill Manager</h1>
