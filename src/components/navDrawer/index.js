@@ -36,7 +36,7 @@ function NavDrawer(props) {
             path: '/',
           },
           {
-            name: 'Bill Input Page',
+            name: 'Bill Manager',
             id: 'bill_manager',
             path: '/bill_manager',
           },
