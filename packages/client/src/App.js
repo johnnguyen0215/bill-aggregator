@@ -16,8 +16,8 @@ function App() {
       <AuthProvider>
         <BillDataProvider>
           <LoadingProvider>
-            <div className="App">
-              <NavBar />
+            <NavBar />
+            <div className="outerContainer">
               <Container>
                 <Routes>
                   <Route exact path={routes.signin} element={<SignIn />} />

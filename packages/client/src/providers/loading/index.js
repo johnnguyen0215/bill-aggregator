@@ -6,9 +6,9 @@ const LoadingContext = createContext({});
 
 export const LoadingProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState();
-  const { gapiLoaded } = useAuth();
+  const { gapiLoaded, gsiLoaded } = useAuth();
 
-  const showSpinner = isLoading || !gapiLoaded;
+  const showSpinner = isLoading || !gapiLoaded || !gsiLoaded;
 
   return (
     <LoadingContext.Provider
@@ -19,7 +19,7 @@ export const LoadingProvider = ({ children }) => {
     >
       {showSpinner ? (
         <Backdrop open={isLoading}>
-          <CircularProgress color="secondary" />
+          <CircularProgress color="primary" />
         </Backdrop>
       ) : (
         children

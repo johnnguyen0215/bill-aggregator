@@ -12,40 +12,49 @@ const isDateInRange = (dateStr) => {
 
 const queryBuilder = (email, subject) => `from:${email} AND subject:${subject}`;
 
-export const getMessageBody = async (gapi, billInfo) => {
-  const response = await gapi.client.gmail.users.messages.list({
-    userId: 'me',
-    maxResults: 10,
-    q: queryBuilder(billInfo.email, billInfo.subject),
-  });
+export const getMessageBody = async (billInfo, failureCallback) => {
+  let response = null;
 
-  const responseObject = JSON.parse(response.body);
-
-  const messageId = responseObject.messages[0].id;
-  const messageResponse = await gapi.client.gmail.users.messages.get({
-    userId: 'me',
-    id: messageId,
-  });
-
-  const messageResponseBody = JSON.parse(messageResponse.body);
-
-  const dateHeader = messageResponseBody.payload.headers.find(
-    (header) => header.name === 'Date'
-  );
-
-  const date = dateHeader.value;
-
-  if (isDateInRange(date)) {
-    const htmlPart = messageResponseBody?.payload?.parts.find(
-      (part) => part.mimeType === 'text/html'
-    );
-
-    const partData = htmlPart.body.data;
-
-    const partBody = atob(partData.replace(/-/g, '+').replace(/_/g, '/'));
-
-    return partBody;
+  try {
+    response = await window.gapi.client.gmail.users.messages.list({
+      userId: 'me',
+      maxResults: 10,
+      q: queryBuilder(billInfo.email, billInfo.subject),
+    });
+  } catch (err) {
+    failureCallback();
+    return;
   }
 
-  return false;
+  if (response) {
+    const responseObject = JSON.parse(response.body);
+
+    const messageId = responseObject.messages[0].id;
+    const messageResponse = await window.gapi.client.gmail.users.messages.get({
+      userId: 'me',
+      id: messageId,
+    });
+
+    const messageResponseBody = JSON.parse(messageResponse.body);
+
+    const dateHeader = messageResponseBody.payload.headers.find(
+      (header) => header.name === 'Date'
+    );
+
+    const date = dateHeader.value;
+
+    if (isDateInRange(date)) {
+      const htmlPart = messageResponseBody?.payload?.parts.find(
+        (part) => part.mimeType === 'text/html'
+      );
+
+      const partData = htmlPart.body.data;
+
+      const partBody = atob(partData.replace(/-/g, '+').replace(/_/g, '/'));
+
+      console.log('PartBody: ', partBody);
+
+      return partBody;
+    }
+  }
 };

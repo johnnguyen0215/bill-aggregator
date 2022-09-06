@@ -5,19 +5,29 @@ import { routes } from '../../router/routes';
 
 const AuthContext = createContext({});
 
-const apiUrl = process.env.REACT_APP_API_URL;
+const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+
+// Discovery doc URL for APIs used by the quickstart
+const DISCOVERY_DOC =
+  'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest';
 
 export const AuthProvider = ({ children }) => {
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [gsiLoaded, setGsiLoaded] = useState(false);
   const [gapiLoaded, setGapiLoaded] = useState(false);
+  const [tokenClient, setTokenClient] = useState();
+
   const navigate = useNavigate();
 
-  const handleCredentialResponse = (data) => {
-    if (data?.credential) {
-      setIsSignedIn(true);
-      localStorage.setItem('aggregator_token', data?.credential);
-      navigate(routes.main);
-    }
+  const initializeGapiClient = async () => {
+    const { gapi } = window;
+
+    await gapi.client.init({
+      apiKey: process.env.REACT_APP_GMAIL_API_KEY,
+      discoveryDocs: [DISCOVERY_DOC],
+    });
+
+    setGapiLoaded(true);
   };
 
   useEffect(() => {
@@ -25,36 +35,34 @@ export const AuthProvider = ({ children }) => {
       const { google } = window;
 
       if (google) {
-        google?.accounts?.id?.initialize({
+        const tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: process.env.REACT_APP_GMAIL_CLIENT_ID,
-          callback: handleCredentialResponse,
+          scope: SCOPES,
         });
 
-        setGapiLoaded(true);
+        setTokenClient(tokenClient);
+        setGsiLoaded(true);
       }
+    });
+
+    loadScript('https://apis.google.com/js/api.js', async () => {
+      const { gapi } = window;
+
+      gapi.load('client', initializeGapiClient);
     });
   }, []);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      const token = localStorage.getItem('aggregator_token');
+    const accessToken = JSON.parse(localStorage.getItem('aggregator_token'));
 
-      if (token) {
-        try {
-          await fetch(`${apiUrl}/verify/${token}`);
+    if (accessToken && gapiLoaded) {
+      const { gapi } = window;
 
-          setIsSignedIn(true);
-        } catch (err) {
-          console.error(err);
-          setIsSignedIn(false);
-        }
-      } else {
-        setIsSignedIn(false);
-      }
-    };
-
-    verifyToken();
-  }, [gapiLoaded]);
+      gapi.client.setToken(accessToken);
+      setIsSignedIn(true);
+      navigate(routes.main);
+    }
+  }, [navigate, gapiLoaded]);
 
   return (
     <AuthContext.Provider
@@ -62,6 +70,8 @@ export const AuthProvider = ({ children }) => {
         isSignedIn,
         setIsSignedIn,
         gapiLoaded,
+        gsiLoaded,
+        tokenClient,
       }}
     >
       {children}

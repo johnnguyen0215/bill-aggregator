@@ -12,5 +12,9 @@
   },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.activeBorder": "#7be05f"
+  },
+  "peacock.color": "#d73155"
 }

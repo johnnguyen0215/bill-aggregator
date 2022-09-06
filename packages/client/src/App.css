@@ -42,6 +42,6 @@ label {
   margin-right: 5px;
 }
 
-.App {
-  display: flex;
+  .outerContainer {
+  margin-top: 64px;
 }
