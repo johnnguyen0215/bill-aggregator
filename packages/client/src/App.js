@@ -1,6 +1,6 @@
 import { Container } from '@mui/material';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import NavBar from './components/navbar/index';
+import NavBar from './components/Navbar/index';
 import { AuthProvider } from './providers/auth';
 import { LoadingProvider } from './providers/loading';
 import { BillDataProvider } from './providers/billData';

@@ -1,0 +1,15 @@
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 50px;
+  width: 500px;
+}
+
+.textFieldContainer {
+  margin-bottom: 20px;
+}
+
+.saveContainer {
+  width: 100%;
+  height: 100%;
+}

@@ -4,25 +4,22 @@ import {
   TableCell,
   TableRow,
   Paper,
-  Fab,
   Table,
   TableHead,
   Button,
   Select,
   MenuItem,
-  Drawer,
-  FormControl,
-  TextField,
-  Typography,
+  Fab,
 } from '@mui/material';
-import { Add, Save } from '@mui/icons-material';
+import { Add, Article, Delete, Edit, Save } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
 import { getDollarAmount, getMessageBody } from '../../shared/messages';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../../router/routes';
 import { useAuth } from '../../providers/auth';
-import styles from './styles.module.css';
-import { green } from '@mui/material/colors';
+import { DetailsDrawer } from '../../components/DetailsDrawer';
+import { snakeCase } from 'snake-case';
+import { blue, green, red } from '@mui/material/colors';
 
 const MONTHS = [
   'January',
@@ -73,9 +70,14 @@ const BILLS_MOCK = [
 export const Main = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { setIsSignedIn } = useAuth();
-  const [billData, setBillData] = useState(BILLS_MOCK);
+  const billDataRaw = localStorage.getItem('bill_aggregator_data');
+
+  const [billData, setBillData] = useState(
+    billDataRaw ? JSON.parse(billDataRaw) : []
+  );
   const [month, setMonth] = useState(1);
   const [isBillDrawerOpen, setIsBillDrawerOpen] = useState(false);
+  const [billDetailFields, setBillDetailFields] = useState({});
 
   const navigate = useNavigate();
 
@@ -91,7 +93,7 @@ export const Main = () => {
 
   const handleGetBills = async () => {
     await Promise.all(() => {
-      BILLS_MOCK.map(async (billInfo) => {
+      billData.map(async (billInfo) => {
         return await getMessageBody(billInfo, failureCallback);
       });
     });
@@ -102,10 +104,51 @@ export const Main = () => {
   };
 
   const handleBillDrawerClose = () => {
+    setBillDetailFields({});
     setIsBillDrawerOpen(false);
   };
 
-  const handleSaveBill = () => {};
+  const handleSaveBill = (billDetails) => {
+    const billIndex = billData.findIndex((bill) => {
+      return bill.id === billDetails.id;
+    });
+
+    const updatedBillData = [...billData];
+
+    if (billIndex !== -1) {
+      updatedBillData[billIndex] = billDetails;
+    } else {
+      updatedBillData.push(billDetails);
+    }
+
+    setIsBillDrawerOpen(false);
+    setBillDetailFields({});
+    setBillData(updatedBillData);
+  };
+
+  const handleRemoveBill = (billId) => {
+    const updatedBillData = [...billData];
+
+    const billIndex = billData.findIndex((bill) => bill.id === billId);
+
+    updatedBillData.splice(billIndex, 1);
+
+    setBillData(updatedBillData);
+  };
+
+  const handleEditBill = (billId) => {
+    const billDetails = billData.find((bill) => bill.id === billId);
+
+    setBillDetailFields(billDetails);
+
+    setIsBillDrawerOpen(true);
+  };
+
+  useEffect(() => {
+    if (billData) {
+      localStorage.setItem('bill_aggregator_data', JSON.stringify(billData));
+    }
+  }, [billData]);
 
   return (
     <div>
@@ -138,6 +181,7 @@ export const Main = () => {
             <TableCell>Amount</TableCell>
             <TableCell>View Bill</TableCell>
             <TableCell>Edit</TableCell>
+            <TableCell>Remove</TableCell>
           </TableHead>
           <TableBody>
             {billData.map((bill) => (
@@ -145,51 +189,62 @@ export const Main = () => {
                 <TableCell>{bill.name}</TableCell>
                 <TableCell>{bill.email}</TableCell>
                 <TableCell>{bill.subject}</TableCell>
-                <TableCell>{bill.amount}</TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
+                <TableCell>${bill.amount}</TableCell>
+                <TableCell>
+                  <Fab
+                    size="small"
+                    sx={{
+                      color: '#FFF',
+                      bgcolor: green[500],
+                      '&:hover': {
+                        bgcolor: green[600],
+                      },
+                    }}
+                  >
+                    <Article fontSize="small" />
+                  </Fab>
+                </TableCell>
+                <TableCell>
+                  <Fab
+                    size="small"
+                    sx={{
+                      color: '#FFF',
+                      bgcolor: blue[500],
+                      '&:hover': {
+                        bgcolor: blue[600],
+                      },
+                    }}
+                    onClick={() => handleEditBill(bill.id)}
+                  >
+                    <Edit fontSize="small" />
+                  </Fab>
+                </TableCell>
+                <TableCell>
+                  <Fab
+                    size="small"
+                    sx={{
+                      color: '#FFF',
+                      bgcolor: red[500],
+                      '&:hover': {
+                        bgcolor: red[600],
+                      },
+                    }}
+                    onClick={() => handleRemoveBill(bill.id)}
+                  >
+                    <Delete fontSize="small" />
+                  </Fab>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <Drawer
-        anchor="right"
-        open={isBillDrawerOpen}
-        onClose={handleBillDrawerClose}
-      >
-        <div class={styles.formContainer}>
-          <Typography variant="h4" gutterBottom align="center">
-            Bill Details
-          </Typography>
-          <div class={styles.textFieldContainer}>
-            <TextField required label="Name" />
-          </div>
-          <div class={styles.textFieldContainer}>
-            <TextField required label="Email" />
-          </div>
-          <div class={`${styles.textFieldContainer}`}>
-            <TextField required label="Subject" fullWidth={500} />
-          </div>
-          <div class={styles.textFieldContainer}>
-            <TextField label="Amount" />
-          </div>
-        </div>
-        <div class={styles.saveContainer}>
-          <Fab
-            sx={{
-              color: '#FFF',
-              bgcolor: green[300],
-              bottom: 16,
-              right: 16,
-              position: 'absolute',
-            }}
-            onClick={handleSaveBill}
-          >
-            <Save />
-          </Fab>
-        </div>
-      </Drawer>
+      <DetailsDrawer
+        isOpen={isBillDrawerOpen}
+        handleClose={handleBillDrawerClose}
+        handleSave={handleSaveBill}
+        billDetailFields={billDetailFields}
+      />
     </div>
   );
 };
