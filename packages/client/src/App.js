@@ -1,4 +1,3 @@
-import './App.css';
 import { Container } from '@mui/material';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import NavBar from './components/navbar/index';
@@ -9,6 +8,7 @@ import { Main } from './pages/Main';
 import { RequireAuth } from './router/components/RequireAuth';
 import { SignIn } from './pages/SignIn';
 import { routes } from './router/routes';
+import styles from './styles.module.css';
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
         <BillDataProvider>
           <LoadingProvider>
             <NavBar />
-            <div className="outerContainer">
+            <div className={styles.outerContainer}>
               <Container>
                 <Routes>
                   <Route exact path={routes.signin} element={<SignIn />} />

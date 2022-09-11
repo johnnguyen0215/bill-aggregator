@@ -50,11 +50,19 @@ export const getMessageBody = async (billInfo, failureCallback) => {
 
       const partData = htmlPart.body.data;
 
-      const partBody = atob(partData.replace(/-/g, '+').replace(/_/g, '/'));
+      const partBody = window.atob(
+        partData.replace(/-/g, '+').replace(/_/g, '/')
+      );
 
-      console.log('PartBody: ', partBody);
+      console.log(partBody);
 
       return partBody;
     }
   }
+};
+
+export const getDollarAmount = (emailBody) => {
+  const matches = emailBody.match(/\$[0-9]+(\.[0-9]+)?/g);
+
+  return matches[0];
 };

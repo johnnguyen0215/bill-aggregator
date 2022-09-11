@@ -30,6 +30,8 @@ export const AuthProvider = ({ children }) => {
     setGapiLoaded(true);
   };
 
+  const handleSignOut = () => {};
+
   useEffect(() => {
     loadScript('https://accounts.google.com/gsi/client', () => {
       const { google } = window;
