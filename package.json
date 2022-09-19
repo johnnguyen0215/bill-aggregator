@@ -28,6 +28,7 @@
     "prettier-eslint-cli": "^5.0.0"
   },
   "dependencies": {
+    "date-fns": "^2.29.3",
     "snake-case": "^3.0.4"
   }
 }

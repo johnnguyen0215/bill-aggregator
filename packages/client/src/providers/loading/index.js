@@ -17,13 +17,15 @@ export const LoadingProvider = ({ children }) => {
         setIsLoading,
       }}
     >
-      {showSpinner ? (
-        <Backdrop open={isLoading}>
+      {showSpinner && (
+        <Backdrop
+          open={isLoading}
+          sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        >
           <CircularProgress color="primary" />
         </Backdrop>
-      ) : (
-        children
       )}
+      {children}
     </LoadingContext.Provider>
   );
 };

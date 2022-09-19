@@ -12,7 +12,7 @@ const isDateInRange = (dateStr) => {
 
 const queryBuilder = (email, subject) => `from:${email} AND subject:${subject}`;
 
-export const getMessageBody = async (billInfo, failureCallback) => {
+export const getMessage = async (billInfo, failureCallback) => {
   let response = null;
 
   try {
@@ -43,6 +43,8 @@ export const getMessageBody = async (billInfo, failureCallback) => {
 
     const date = dateHeader.value;
 
+    let body = '';
+
     if (isDateInRange(date)) {
       const htmlPart = messageResponseBody?.payload?.parts.find(
         (part) => part.mimeType === 'text/html'
@@ -54,10 +56,13 @@ export const getMessageBody = async (billInfo, failureCallback) => {
         partData.replace(/-/g, '+').replace(/_/g, '/')
       );
 
-      console.log(partBody);
-
-      return partBody;
+      body = partBody;
     }
+
+    return {
+      date,
+      body,
+    };
   }
 };
 

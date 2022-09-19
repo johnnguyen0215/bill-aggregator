@@ -13,13 +13,15 @@ import {
 } from '@mui/material';
 import { Add, Article, Delete, Edit, Save } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
-import { getDollarAmount, getMessageBody } from '../../shared/messages';
+import { getDollarAmount, getMessage } from '../../shared/messages';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../../router/routes';
 import { useAuth } from '../../providers/auth';
 import { DetailsDrawer } from '../../components/DetailsDrawer';
 import { snakeCase } from 'snake-case';
 import { blue, green, red } from '@mui/material/colors';
+import { useLoading } from '../../providers/loading';
+import { format } from 'date-fns';
 
 const MONTHS = [
   'January',
@@ -36,39 +38,16 @@ const MONTHS = [
   'December',
 ];
 
-const BILLS_MOCK = [
-  {
-    name: 'Socal Gas',
-    id: 'socal_gas',
-    email: 'customerservice@socalgas.com',
-    subject: 'Your Bill from SoCalGas is now available',
-    type: 'email',
-  },
-  {
-    name: 'Socal Edison',
-    id: 'socal_edison',
-    email: 'sce@entnotification.sce.com',
-    subject: 'Bill is Ready',
-    type: 'email',
-  },
-  {
-    name: 'State Farm',
-    id: 'state_farm',
-    email: 'statefarminfo@statefarminfo.com',
-    subject: 'Your State Farm bill is ready',
-    type: 'email',
-  },
-  {
-    name: 'Garden Grove Water',
-    id: 'garden_grove_water',
-    email: 'finance-billing@ggcity.org',
-    subject: 'City of Garden Grove: Water Bill',
-    type: 'email',
-  },
-];
+const filterMessageBody = (billData) => {
+  return billData.map((bill) => {
+    const { messageBody, ...billDetails } = bill;
+
+    return billDetails;
+  });
+};
 
 export const Main = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { setIsLoading } = useLoading();
   const { setIsSignedIn } = useAuth();
   const billDataRaw = localStorage.getItem('bill_aggregator_data');
 
@@ -87,16 +66,41 @@ export const Main = () => {
     navigate(routes.signin);
   }, [setIsSignedIn, navigate]);
 
+  const fetchAllMessages = async () => {
+    setIsLoading(true);
+
+    const messages = await Promise.all(
+      billData.map(async (billInfo) => {
+        return await getMessage(billInfo, failureCallback);
+      })
+    );
+
+    const hydratedBills = billData.map((bill, index) => {
+      const message = messages[index];
+
+      const messageDate = new Date(message?.date);
+
+      const formattedDate = format(messageDate, 'MMM dd yyyy');
+
+      return {
+        ...bill,
+        messageBody: message?.body,
+        amount: getDollarAmount(message?.body),
+        date: formattedDate,
+      };
+    });
+
+    setBillData(hydratedBills);
+
+    setIsLoading(false);
+  };
+
   const handleAddBill = () => {
     setIsBillDrawerOpen(true);
   };
 
   const handleGetBills = async () => {
-    await Promise.all(() => {
-      billData.map(async (billInfo) => {
-        return await getMessageBody(billInfo, failureCallback);
-      });
-    });
+    await fetchAllMessages();
   };
 
   const handleMonthSelect = (event) => {
@@ -146,7 +150,10 @@ export const Main = () => {
 
   useEffect(() => {
     if (billData) {
-      localStorage.setItem('bill_aggregator_data', JSON.stringify(billData));
+      localStorage.setItem(
+        'bill_aggregator_data',
+        JSON.stringify(filterMessageBody(billData))
+      );
     }
   }, [billData]);
 
@@ -179,6 +186,7 @@ export const Main = () => {
             <TableCell>Email</TableCell>
             <TableCell>Subject</TableCell>
             <TableCell>Amount</TableCell>
+            <TableCell>Date</TableCell>
             <TableCell>View Bill</TableCell>
             <TableCell>Edit</TableCell>
             <TableCell>Remove</TableCell>
@@ -189,20 +197,24 @@ export const Main = () => {
                 <TableCell>{bill.name}</TableCell>
                 <TableCell>{bill.email}</TableCell>
                 <TableCell>{bill.subject}</TableCell>
-                <TableCell>${bill.amount}</TableCell>
+                <TableCell>{bill.amount}</TableCell>
+                <TableCell>{bill.date}</TableCell>
                 <TableCell>
-                  <Fab
-                    size="small"
-                    sx={{
-                      color: '#FFF',
-                      bgcolor: green[500],
-                      '&:hover': {
-                        bgcolor: green[600],
-                      },
-                    }}
-                  >
-                    <Article fontSize="small" />
-                  </Fab>
+                  {bill.type === 'email' && (
+                    <Fab
+                      size="small"
+                      sx={{
+                        color: '#FFF',
+                        bgcolor: green[500],
+                        '&:hover': {
+                          bgcolor: green[600],
+                        },
+                      }}
+                      onClick={() => {}}
+                    >
+                      <Article fontSize="small" />
+                    </Fab>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Fab
