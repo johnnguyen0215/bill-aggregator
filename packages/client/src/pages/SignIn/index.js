@@ -2,6 +2,7 @@ import { useAuth } from '../../providers/auth';
 import styles from './styles.module.css';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../../router/routes';
+import { Button } from '@mui/material';
 
 export const SignIn = () => {
   const { tokenClient, setIsSignedIn } = useAuth();
@@ -36,7 +37,14 @@ export const SignIn = () => {
 
   return (
     <div className={styles.container}>
-      <button onClick={handleAuthClick}>Sign In</button>
+      <Button
+        size="large"
+        color="primary"
+        variant="outlined"
+        onClick={handleAuthClick}
+      >
+        Sign In with Google
+      </Button>
     </div>
   );
 };

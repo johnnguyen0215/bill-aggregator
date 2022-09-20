@@ -30,7 +30,12 @@ export const AuthProvider = ({ children }) => {
     setGapiLoaded(true);
   };
 
-  const handleSignOut = () => {};
+  const signout = () => {
+    console.log('Signing out bruv');
+    localStorage.removeItem('aggregator_token');
+    setIsSignedIn(false);
+    navigate(routes.signin);
+  };
 
   useEffect(() => {
     loadScript('https://accounts.google.com/gsi/client', () => {
@@ -74,6 +79,7 @@ export const AuthProvider = ({ children }) => {
         gapiLoaded,
         gsiLoaded,
         tokenClient,
+        signout,
       }}
     >
       {children}

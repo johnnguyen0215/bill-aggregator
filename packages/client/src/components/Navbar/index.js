@@ -3,7 +3,7 @@ import { useAuth } from '../../providers/auth';
 import styles from './styles.module.css';
 
 function NavBar() {
-  const { isSignedIn, handleSignout } = useAuth();
+  const { isSignedIn, signout } = useAuth();
 
   return (
     <AppBar position="fixed">
@@ -12,8 +12,8 @@ function NavBar() {
           {isSignedIn && (
             <Button
               className="signoutButton"
-              variant="contained"
-              onClick={handleSignout}
+              variant="outlined"
+              onClick={signout}
               color="secondary"
             >
               Sign Out

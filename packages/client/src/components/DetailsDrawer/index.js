@@ -1,4 +1,10 @@
-import { Fab, Drawer, TextField, Typography } from '@mui/material';
+import {
+  Fab,
+  Drawer,
+  TextField,
+  Typography,
+  InputAdornment,
+} from '@mui/material';
 import { Save } from '@mui/icons-material';
 import styles from './styles.module.css';
 import { green } from '@mui/material/colors';
@@ -40,6 +46,7 @@ export const DetailsDrawer = ({
       email,
       subject,
       amount,
+      index: billDetailFields.index,
       id: snakeCase(name),
       type: email ? 'email' : 'manual',
     };
@@ -93,6 +100,11 @@ export const DetailsDrawer = ({
             label="Amount"
             type="number"
             value={amount}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
+            }}
             onChange={(event) =>
               handleFieldChange('amount', event.target.value)
             }

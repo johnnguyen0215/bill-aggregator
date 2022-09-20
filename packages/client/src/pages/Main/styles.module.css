@@ -1,0 +1,17 @@
+.controlContainer {
+  margin-top: 84px;
+  margin-bottom: 20px;
+  justify-content: space-between;
+  display: flex;
+}
+
+.leftControlContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rightControlContainer {
+  display: flex;
+  align-items: center;
+}

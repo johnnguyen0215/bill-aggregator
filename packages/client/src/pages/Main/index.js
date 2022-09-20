@@ -10,15 +10,19 @@ import {
   Select,
   MenuItem,
   Fab,
+  Typography,
+  Grid,
+  TextField,
+  Modal,
+  Box,
 } from '@mui/material';
-import { Add, Article, Delete, Edit, Save } from '@mui/icons-material';
+import { Article, Delete, Edit } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
 import { getDollarAmount, getMessage } from '../../shared/messages';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../../router/routes';
 import { useAuth } from '../../providers/auth';
 import { DetailsDrawer } from '../../components/DetailsDrawer';
-import { snakeCase } from 'snake-case';
 import { blue, green, red } from '@mui/material/colors';
 import { useLoading } from '../../providers/loading';
 import { format } from 'date-fns';
@@ -47,48 +51,79 @@ const filterMessageBody = (billData) => {
 };
 
 export const Main = () => {
-  const { setIsLoading } = useLoading();
-  const { setIsSignedIn } = useAuth();
   const billDataRaw = localStorage.getItem('bill_aggregator_data');
 
   const [billData, setBillData] = useState(
     billDataRaw ? JSON.parse(billDataRaw) : []
   );
-  const [month, setMonth] = useState(1);
+
+  const [currentBillHtml, setCurrentBillHtml] = useState('');
+
+  const [billModalOpen, setBillModalOpen] = useState(false);
+
+  const handleBillModalClose = () => {
+    setBillModalOpen(false);
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState(1);
+  const [displayedMonths, setDisplayedMonths] = useState([]);
+  const [divisor, setDivisor] = useState(1);
+
+  const { setIsLoading } = useLoading();
+  const { signout } = useAuth();
+
   const [isBillDrawerOpen, setIsBillDrawerOpen] = useState(false);
   const [billDetailFields, setBillDetailFields] = useState({});
 
-  const navigate = useNavigate();
+  const [billHtmlList, setBillHtmlList] = useState([]);
+
+  const [billTotal, setBillTotal] = useState(0);
 
   const failureCallback = useCallback(() => {
-    localStorage.removeItem('aggregator_token');
-    setIsSignedIn(false);
-    navigate(routes.signin);
-  }, [setIsSignedIn, navigate]);
+    signout();
+  }, [signout]);
 
   const fetchAllMessages = async () => {
+    const billsWithEmails = billData.filter(
+      (billInfo) => billInfo.type === 'email'
+    );
+
     setIsLoading(true);
 
     const messages = await Promise.all(
-      billData.map(async (billInfo) => {
-        return await getMessage(billInfo, failureCallback);
+      billsWithEmails.map(async (billInfo) => {
+        return await getMessage(billInfo, failureCallback, selectedMonth + 1);
       })
     );
 
-    const hydratedBills = billData.map((bill, index) => {
-      const message = messages[index];
+    const htmlList = [];
 
-      const messageDate = new Date(message?.date);
+    const hydratedBills = billData.map((bill) => {
+      if (bill.type === 'email') {
+        const message = messages.find((message) => message.id === bill.id);
 
-      const formattedDate = format(messageDate, 'MMM dd yyyy');
+        let messageDate = '';
 
-      return {
-        ...bill,
-        messageBody: message?.body,
-        amount: getDollarAmount(message?.body),
-        date: formattedDate,
-      };
+        if (message?.date) {
+          messageDate = format(new Date(message?.date), 'MMM dd yyyy');
+        }
+
+        htmlList.push(message?.body);
+
+        return {
+          ...bill,
+          messageBody: message?.body,
+          amount: getDollarAmount(message?.body),
+          date: messageDate,
+        };
+      }
+
+      htmlList.push('');
+
+      return bill;
     });
+
+    setBillHtmlList(htmlList);
 
     setBillData(hydratedBills);
 
@@ -104,7 +139,7 @@ export const Main = () => {
   };
 
   const handleMonthSelect = (event) => {
-    setMonth(event.target.value);
+    setSelectedMonth(event.target.value);
   };
 
   const handleBillDrawerClose = () => {
@@ -112,17 +147,24 @@ export const Main = () => {
     setIsBillDrawerOpen(false);
   };
 
+  const handleDivisorChange = (event) => {
+    setDivisor(event.target.value);
+  };
+
+  const handleViewBill = (index) => {
+    setCurrentBillHtml(billHtmlList[index]);
+    setBillModalOpen(true);
+  };
+
   const handleSaveBill = (billDetails) => {
-    const billIndex = billData.findIndex((bill) => {
-      return bill.id === billDetails.id;
-    });
+    const { index, ...billInfo } = billDetails;
 
     const updatedBillData = [...billData];
 
-    if (billIndex !== -1) {
-      updatedBillData[billIndex] = billDetails;
+    if (index !== undefined) {
+      updatedBillData[index] = billInfo;
     } else {
-      updatedBillData.push(billDetails);
+      updatedBillData.push(billInfo);
     }
 
     setIsBillDrawerOpen(false);
@@ -140,10 +182,13 @@ export const Main = () => {
     setBillData(updatedBillData);
   };
 
-  const handleEditBill = (billId) => {
-    const billDetails = billData.find((bill) => bill.id === billId);
+  const handleEditBill = (index) => {
+    const billDetails = billData[index];
 
-    setBillDetailFields(billDetails);
+    setBillDetailFields({
+      ...billDetails,
+      index,
+    });
 
     setIsBillDrawerOpen(true);
   };
@@ -154,31 +199,64 @@ export const Main = () => {
         'bill_aggregator_data',
         JSON.stringify(filterMessageBody(billData))
       );
+
+      const total = billData.reduce((acc, billInfo) => {
+        return (
+          acc +
+          (billInfo.amount !== undefined ? parseFloat(billInfo.amount) : 0)
+        );
+      }, 0);
+
+      setBillTotal(total);
     }
   }, [billData]);
 
+  useEffect(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+
+    setSelectedMonth(currentMonth);
+
+    setDisplayedMonths(MONTHS.slice(0, currentMonth));
+  }, []);
+
   return (
     <div>
-      {/* <Fab color="secondary" onClick={handleAddBill}>
-        <Add />
-      </Fab> */}
-      <Select
-        labelId="demo-simple-select-label"
-        id="demo-simple-select"
-        value={month}
-        label="Age"
-        onChange={handleMonthSelect}
+      <Grid
+        container
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          marginTop: '86px',
+          marginBottom: '20px',
+        }}
       >
-        {MONTHS.map((month, index) => {
-          return <MenuItem value={index + 1}>{month}</MenuItem>;
-        })}
-      </Select>
-      <Button variant="contained" onClick={handleGetBills}>
-        Get Bills
-      </Button>
-      <Button variant="contained" onClick={handleAddBill}>
-        Add Bill
-      </Button>
+        <Grid container item xs={6} spacing={2} alignItems="center">
+          <Grid item>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={selectedMonth}
+              label="Age"
+              onChange={handleMonthSelect}
+            >
+              {displayedMonths?.map((month, index) => {
+                return <MenuItem value={index + 1}>{month}</MenuItem>;
+              })}
+            </Select>
+          </Grid>
+          <Grid item>
+            <Button variant="outlined" onClick={handleGetBills}>
+              Get Bills
+            </Button>
+          </Grid>
+        </Grid>
+        <Grid item>
+          <Button variant="outlined" onClick={handleAddBill}>
+            Add Bill
+          </Button>
+        </Grid>
+      </Grid>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -192,15 +270,17 @@ export const Main = () => {
             <TableCell>Remove</TableCell>
           </TableHead>
           <TableBody>
-            {billData.map((bill) => (
+            {billData.map((bill, index) => (
               <TableRow key={bill.id}>
                 <TableCell>{bill.name}</TableCell>
                 <TableCell>{bill.email}</TableCell>
                 <TableCell>{bill.subject}</TableCell>
-                <TableCell>{bill.amount}</TableCell>
-                <TableCell>{bill.date}</TableCell>
                 <TableCell>
-                  {bill.type === 'email' && (
+                  {bill.amount !== undefined ? `$${bill.amount}` : 'Empty'}
+                </TableCell>
+                <TableCell>{bill.date ? bill.date : 'Empty'}</TableCell>
+                <TableCell>
+                  {billHtmlList[index] && (
                     <Fab
                       size="small"
                       sx={{
@@ -210,7 +290,7 @@ export const Main = () => {
                           bgcolor: green[600],
                         },
                       }}
-                      onClick={() => {}}
+                      onClick={() => handleViewBill(index)}
                     >
                       <Article fontSize="small" />
                     </Fab>
@@ -226,7 +306,7 @@ export const Main = () => {
                         bgcolor: blue[600],
                       },
                     }}
-                    onClick={() => handleEditBill(bill.id)}
+                    onClick={() => handleEditBill(index)}
                   >
                     <Edit fontSize="small" />
                   </Fab>
@@ -251,6 +331,44 @@ export const Main = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Paper
+        sx={{
+          marginTop: '20px',
+          padding: '16px',
+        }}
+      >
+        <Typography variant="h5">Total: ${billTotal}</Typography>
+        <TextField
+          sx={{
+            marginTop: '20px',
+          }}
+          type="number"
+          label="Divisor"
+          value={divisor}
+          onChange={handleDivisorChange}
+        />
+        <Typography variant="h5" sx={{ marginTop: '20px' }}>
+          Monthly Split: ${(billTotal / divisor).toFixed(2)}
+        </Typography>
+      </Paper>
+      <Modal open={billModalOpen} onClose={handleBillModalClose}>
+        <Paper
+          sx={{
+            position: 'absolute',
+            padding: '20px',
+            height: '600px',
+            width: '800px',
+            top: '50%',
+            left: '50%',
+            overflow: 'scroll',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <Box>
+            <div dangerouslySetInnerHTML={{ __html: currentBillHtml }} />
+          </Box>
+        </Paper>
+      </Modal>
       <DetailsDrawer
         isOpen={isBillDrawerOpen}
         handleClose={handleBillDrawerClose}
