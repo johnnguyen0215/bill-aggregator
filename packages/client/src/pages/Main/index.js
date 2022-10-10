@@ -337,7 +337,7 @@ export const Main = () => {
           padding: '16px',
         }}
       >
-        <Typography variant="h5">Total: ${billTotal}</Typography>
+        <Typography variant="h5">Total: ${billTotal.toFixed(2)}</Typography>
         <TextField
           sx={{
             marginTop: '20px',

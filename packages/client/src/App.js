@@ -24,9 +24,9 @@ const darkTheme = createTheme({
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <BillDataProvider>
-          <LoadingProvider>
+      <LoadingProvider>
+        <AuthProvider>
+          <BillDataProvider>
             <ThemeProvider theme={darkTheme}>
               <CssBaseline />
               <NavBar />
@@ -41,9 +41,9 @@ function App() {
                 </Container>
               </div>
             </ThemeProvider>
-          </LoadingProvider>
-        </BillDataProvider>
-      </AuthProvider>
+          </BillDataProvider>
+        </AuthProvider>
+      </LoadingProvider>
     </Router>
   );
 }

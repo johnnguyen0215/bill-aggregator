@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import loadScript from 'load-script';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../../router/routes';
+import { useLoading } from '../loading';
 
 const AuthContext = createContext({});
 
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [gsiLoaded, setGsiLoaded] = useState(false);
   const [gapiLoaded, setGapiLoaded] = useState(false);
   const [tokenClient, setTokenClient] = useState();
+  const { setIsLoading } = useLoading();
 
   const navigate = useNavigate();
 
@@ -31,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signout = () => {
-    console.log('Signing out bruv');
+    setIsLoading(false);
     localStorage.removeItem('aggregator_token');
     setIsSignedIn(false);
     navigate(routes.signin);
