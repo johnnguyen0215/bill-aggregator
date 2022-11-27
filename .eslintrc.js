@@ -5,8 +5,8 @@ module.exports = {
     jest: true,
     node: true,
   },
-  parser: 'babel-eslint',
-  extends: ['airbnb', 'prettier', 'prettier/react'],
+  parser: '@babel/eslint-parser',
+  extends: ['airbnb', 'prettier'],
   globals: {
     Atomics: 'readonly',
     SharedArrayBuffer: 'readonly',
@@ -17,11 +17,14 @@ module.exports = {
       modules: true,
     },
     ecmaVersion: 2018,
+    requireConfigFile: false,
     sourceType: 'module',
+    babelOptions: {
+      presets: ['@babel/preset-react'],
+    },
   },
   plugins: ['react', 'prettier'],
   rules: {
-    'prettier/prettier': 'error',
     'react/react-in-jsx-scope': 0,
     'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx'] }],
     'react/forbid-prop-types': [0, { forbid: ['any'] }],
