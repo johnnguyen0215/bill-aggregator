@@ -2,7 +2,14 @@
   display: flex;
   flex-direction: column;
   padding: 50px;
-  width: 500px;
+
+
+}
+
+@media (min-width: 768px) {
+  .formContainer {
+    width: 500px;
+  }
 }
 
 .textFieldContainer {
