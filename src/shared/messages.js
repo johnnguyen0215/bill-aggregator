@@ -1,15 +1,3 @@
-const isDateInRange = (dateStr) => {
-  const today = new Date();
-
-  const lastMonth = new Date();
-  lastMonth.setDate(1);
-  lastMonth.setMonth(lastMonth.getMonth() - 1);
-
-  const date = new Date(dateStr);
-
-  return date <= today && date >= lastMonth;
-};
-
 const queryBuilder = (email, subject, currentMonth) => {
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -33,8 +21,10 @@ export const getMessage = async (billInfo, failureCallback, currentMonth) => {
     });
   } catch (err) {
     failureCallback();
-    return;
   }
+
+  let date = ''
+  let body = ''
 
   if (response?.result?.messages) {
     const messageId = response?.result?.messages[0].id;
@@ -49,9 +39,8 @@ export const getMessage = async (billInfo, failureCallback, currentMonth) => {
       (header) => header.name === 'Date'
     );
 
-    const date = dateHeader.value;
+    date = dateHeader.value;
 
-    let body = '';
 
     let htmlPart = null;
 
@@ -70,18 +59,12 @@ export const getMessage = async (billInfo, failureCallback, currentMonth) => {
     );
 
     body = partBody;
-
-    return {
-      id: billInfo.id,
-      date,
-      body,
-    };
   }
 
   return {
     id: billInfo.id,
-    date: '',
-    body: '',
+    date,
+    body,
   };
 };
 

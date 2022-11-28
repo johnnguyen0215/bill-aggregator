@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 
 // const [billsInfo, setBillsInfo] = useState({
 //   socal_gas: {
@@ -29,12 +29,11 @@ const BillDataContext = createContext({});
 export const BillDataProvider = ({ children }) => {
   const [billData, setBillData] = useState();
 
+  const contextValues = useMemo(() => ({billData, setBillData}), [billData, setBillData])
+
   return (
     <BillDataContext.Provider
-      value={{
-        billData,
-        setBillData,
-      }}
+      value={contextValues}
     >
       {children}
     </BillDataContext.Provider>

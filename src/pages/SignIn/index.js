@@ -1,14 +1,18 @@
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@mui/material';
 import { useAuth } from '../../providers/auth';
 import styles from './styles.module.css';
-import { useNavigate } from 'react-router-dom';
 import { routes } from '../../router/routes';
-import { Button } from '@mui/material';
+import { useGapi } from '../../providers/gapi';
 
 export const SignIn = () => {
-  const { tokenClient, setIsSignedIn } = useAuth();
+  const { setIsSignedIn } = useAuth();
+  const { tokenClient } = useGapi()
   const navigate = useNavigate();
 
   const handleAuthClick = () => {
+    console.log('Handling auth click')
+    console.log('TokenClient: ', tokenClient)
     if (tokenClient) {
       const { gapi } = window;
 

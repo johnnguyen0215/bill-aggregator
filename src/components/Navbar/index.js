@@ -2,7 +2,7 @@ import { Button, AppBar, Toolbar } from '@mui/material';
 import { useAuth } from '../../providers/auth';
 import styles from './styles.module.css';
 
-function NavBar() {
+export const NavBar = () => {
   const { isSignedIn, signout } = useAuth();
 
   return (
@@ -25,4 +25,3 @@ function NavBar() {
   );
 }
 
-export default NavBar;

@@ -18,14 +18,12 @@ import {
 } from '@mui/material';
 import { Article, Delete, Edit } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
+import { blue, green, red } from '@mui/material/colors';
+import { format } from 'date-fns';
 import { getDollarAmount, getMessage } from '../../shared/messages';
-import { useNavigate } from 'react-router-dom';
-import { routes } from '../../router/routes';
 import { useAuth } from '../../providers/auth';
 import { DetailsDrawer } from '../../components/DetailsDrawer';
-import { blue, green, red } from '@mui/material/colors';
 import { useLoading } from '../../providers/loading';
-import { format } from 'date-fns';
 
 const MONTHS = [
   'January',
@@ -42,13 +40,11 @@ const MONTHS = [
   'December',
 ];
 
-const filterMessageBody = (billData) => {
-  return billData.map((bill) => {
+const filterMessageBody = (billData) => billData.map((bill) => {
     const { messageBody, ...billDetails } = bill;
 
     return billDetails;
   });
-};
 
 export const Main = () => {
   const billDataRaw = localStorage.getItem('bill_aggregator_data');
@@ -91,29 +87,27 @@ export const Main = () => {
     setIsLoading(true);
 
     const messages = await Promise.all(
-      billsWithEmails.map(async (billInfo) => {
-        return await getMessage(billInfo, failureCallback, selectedMonth + 1);
-      })
+      billsWithEmails.map(async (billInfo) => getMessage(billInfo, failureCallback, selectedMonth + 1))
     );
 
     const htmlList = [];
 
     const hydratedBills = billData.map((bill) => {
       if (bill.type === 'email') {
-        const message = messages.find((message) => message.id === bill.id);
+        const billMessage = messages.find((message) => message.id === bill.id);
 
         let messageDate = '';
 
-        if (message?.date) {
-          messageDate = format(new Date(message?.date), 'MMM dd yyyy');
+        if (billMessage?.date) {
+          messageDate = format(new Date(billMessage?.date), 'MMM dd yyyy');
         }
 
-        htmlList.push(message?.body);
+        htmlList.push(billMessage?.body);
 
         return {
           ...bill,
-          messageBody: message?.body,
-          amount: getDollarAmount(message?.body),
+          messageBody: billMessage?.body,
+          amount: getDollarAmount(billMessage?.body),
           date: messageDate,
         };
       }
@@ -200,12 +194,10 @@ export const Main = () => {
         JSON.stringify(filterMessageBody(billData))
       );
 
-      const total = billData.reduce((acc, billInfo) => {
-        return (
+      const total = billData.reduce((acc, billInfo) => (
           acc +
           (billInfo.amount !== undefined ? parseFloat(billInfo.amount) : 0)
-        );
-      }, 0);
+        ), 0);
 
       setBillTotal(total);
     }
@@ -240,9 +232,7 @@ export const Main = () => {
               label="Age"
               onChange={handleMonthSelect}
             >
-              {displayedMonths?.map((month, index) => {
-                return <MenuItem value={index + 1}>{month}</MenuItem>;
-              })}
+              {displayedMonths?.map((month, index) => <MenuItem value={index + 1}>{month}</MenuItem>)}
             </Select>
           </Grid>
           <Grid item>

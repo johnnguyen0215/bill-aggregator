@@ -6,10 +6,10 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { Save } from '@mui/icons-material';
-import styles from './styles.module.css';
 import { green } from '@mui/material/colors';
 import { useEffect, useState } from 'react';
 import { snakeCase } from 'snake-case';
+import styles from './styles.module.css';
 
 export const DetailsDrawer = ({
   isOpen,
@@ -65,11 +65,11 @@ export const DetailsDrawer = ({
 
   return (
     <Drawer anchor="right" open={isOpen} onClose={handleClose}>
-      <div class={styles.formContainer}>
+      <div className={styles.formContainer}>
         <Typography variant="h4" gutterBottom align="center">
           Bill Details
         </Typography>
-        <div class={styles.textFieldContainer}>
+        <div className={styles.textFieldContainer}>
           <TextField
             required
             label="Name"
@@ -77,7 +77,7 @@ export const DetailsDrawer = ({
             onChange={(event) => handleFieldChange('name', event.target.value)}
           />
         </div>
-        <div class={styles.textFieldContainer} value={email}>
+        <div className={styles.textFieldContainer} value={email}>
           <TextField
             type="email"
             label="Email"
@@ -85,7 +85,7 @@ export const DetailsDrawer = ({
             onChange={(event) => handleFieldChange('email', event.target.value)}
           />
         </div>
-        <div class={`${styles.textFieldContainer}`} value={subject}>
+        <div className={`${styles.textFieldContainer}`} value={subject}>
           <TextField
             label="Subject"
             fullWidth={500}
@@ -95,7 +95,7 @@ export const DetailsDrawer = ({
             }
           />
         </div>
-        <div class={styles.textFieldContainer} value={amount}>
+        <div className={styles.textFieldContainer} value={amount}>
           <TextField
             label="Amount"
             type="number"
@@ -111,7 +111,7 @@ export const DetailsDrawer = ({
           />
         </div>
       </div>
-      <div class={styles.saveContainer}>
+      <div className={styles.saveContainer}>
         <Fab
           sx={{
             color: '#FFF',

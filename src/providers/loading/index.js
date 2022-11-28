@@ -1,21 +1,20 @@
 import { Backdrop, CircularProgress } from '@mui/material';
-import { createContext, useContext, useState } from 'react';
-import { useAuth } from '../auth';
+import { useMemo , createContext, useContext, useState } from 'react';
+import { useGapi } from '../gapi';
 
 const LoadingContext = createContext({});
 
 export const LoadingProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState();
-  const { gapiLoaded, gsiLoaded } = useAuth();
+  const { gapiLoaded, gsiLoaded } = useGapi();
 
-  const showSpinner = isLoading || !gapiLoaded || !gsiLoaded;
+  const showSpinner = isLoading || !gapiLoaded || !gsiLoaded
+
+  const contextValues = useMemo(() => ({showSpinner, setIsLoading}), [isLoading, showSpinner])
 
   return (
     <LoadingContext.Provider
-      value={{
-        isLoading: showSpinner,
-        setIsLoading,
-      }}
+      value={contextValues}
     >
       {showSpinner && (
         <Backdrop
