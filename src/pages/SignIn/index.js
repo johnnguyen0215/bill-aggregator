@@ -7,12 +7,10 @@ import { useGapi } from '../../providers/gapi';
 
 export const SignIn = () => {
   const { setIsSignedIn } = useAuth();
-  const { tokenClient } = useGapi()
+  const { tokenClient } = useGapi();
   const navigate = useNavigate();
 
   const handleAuthClick = () => {
-    console.log('Handling auth click')
-    console.log('TokenClient: ', tokenClient)
     if (tokenClient) {
       const { gapi } = window;
 

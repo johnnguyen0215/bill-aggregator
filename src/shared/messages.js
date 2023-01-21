@@ -1,30 +1,40 @@
-const queryBuilder = (email, subject, currentMonth) => {
+const queryBuilder = (
+  email,
+  subject,
+  { month: selectedMonth, year: selectedYear }
+) => {
   const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
 
-  const beforeDate = `${currentMonth}/15/${currentYear}`;
-  const afterDate = `${
-    currentMonth === 1 ? 12 : currentMonth - 1
-  }/15/${currentYear}`;
+  const beforeDate = `${currentMonth + 1}/15/${currentYear}`;
+  const afterDate = `${selectedMonth + 1}/15/${selectedYear}`;
+
+  console.log('BeforeDate: ', beforeDate);
+  console.log('AfterDate: ', afterDate);
 
   return `from:${email} AND subject:${subject} AND before:${beforeDate} AND after:${afterDate}`;
 };
 
-export const getMessage = async (billInfo, failureCallback, currentMonth) => {
+export const getMessage = async (
+  billInfo,
+  failureCallback,
+  selectedMonthYear
+) => {
   let response = null;
 
   try {
     response = await window.gapi.client.gmail.users.messages.list({
       userId: 'me',
       maxResults: 10,
-      q: queryBuilder(billInfo.email, billInfo.subject, currentMonth),
+      q: queryBuilder(billInfo.email, billInfo.subject, selectedMonthYear),
     });
   } catch (err) {
     failureCallback();
   }
 
-  let date = ''
-  let body = ''
+  let date = '';
+  let body = '';
 
   if (response?.result?.messages) {
     const messageId = response?.result?.messages[0].id;
@@ -40,7 +50,6 @@ export const getMessage = async (billInfo, failureCallback, currentMonth) => {
     );
 
     date = dateHeader.value;
-
 
     let htmlPart = null;
 

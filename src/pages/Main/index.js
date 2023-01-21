@@ -20,6 +20,7 @@ import { Article, Delete, Edit } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
 import { blue, green, red } from '@mui/material/colors';
 import { format } from 'date-fns';
+import { hydrate } from 'react-dom';
 import { getDollarAmount, getMessage } from '../../shared/messages';
 import { useAuth } from '../../providers/auth';
 import { DetailsDrawer } from '../../components/DetailsDrawer';
@@ -40,7 +41,19 @@ const MONTHS = [
   'December',
 ];
 
-const filterMessageBody = (billData) => billData.map((bill) => {
+const monthYears = MONTHS.map((month, index) => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  return {
+    month: index,
+    year: index > currentMonth ? currentYear - 1 : currentYear,
+  };
+});
+
+const filterMessageBody = (billData) =>
+  billData.map((bill) => {
     const { messageBody, ...billDetails } = bill;
 
     return billDetails;
@@ -53,7 +66,7 @@ export const Main = () => {
     billDataRaw ? JSON.parse(billDataRaw) : []
   );
 
-  const [currentBillHtml, setCurrentBillHtml] = useState('');
+  const [currentBillHtml, setCurrentBillHtml] = useState();
 
   const [billModalOpen, setBillModalOpen] = useState(false);
 
@@ -61,8 +74,9 @@ export const Main = () => {
     setBillModalOpen(false);
   };
 
-  const [selectedMonth, setSelectedMonth] = useState(1);
-  const [displayedMonths, setDisplayedMonths] = useState([]);
+  const [selectIndex, setSelectIndex] = useState(0);
+  const [selectedMonthYear, setSelectedMonthYear] = useState(monthYears[0]);
+
   const [divisor, setDivisor] = useState(1);
 
   const { setIsLoading } = useLoading();
@@ -87,7 +101,9 @@ export const Main = () => {
     setIsLoading(true);
 
     const messages = await Promise.all(
-      billsWithEmails.map(async (billInfo) => getMessage(billInfo, failureCallback, selectedMonth + 1))
+      billsWithEmails.map(async (billInfo) =>
+        getMessage(billInfo, failureCallback, selectedMonthYear)
+      )
     );
 
     const htmlList = [];
@@ -133,7 +149,9 @@ export const Main = () => {
   };
 
   const handleMonthSelect = (event) => {
-    setSelectedMonth(event.target.value);
+    const index = event.target.value;
+    setSelectIndex(index);
+    setSelectedMonthYear(monthYears[index]);
   };
 
   const handleBillDrawerClose = () => {
@@ -194,10 +212,12 @@ export const Main = () => {
         JSON.stringify(filterMessageBody(billData))
       );
 
-      const total = billData.reduce((acc, billInfo) => (
+      const total = billData.reduce(
+        (acc, billInfo) =>
           acc +
-          (billInfo.amount !== undefined ? parseFloat(billInfo.amount) : 0)
-        ), 0);
+          (billInfo.amount !== undefined ? parseFloat(billInfo.amount) : 0),
+        0
+      );
 
       setBillTotal(total);
     }
@@ -205,11 +225,13 @@ export const Main = () => {
 
   useEffect(() => {
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
+    const previousMonthIndex = currentDate.getMonth() - 1;
 
-    setSelectedMonth(currentMonth);
+    const previousMonth =
+      previousMonthIndex < 0 ? MONTHS.length - 1 : previousMonthIndex;
 
-    setDisplayedMonths(MONTHS.slice(0, currentMonth));
+    setSelectIndex(previousMonth);
+    setSelectedMonthYear(monthYears[previousMonth]);
   }, []);
 
   return (
@@ -228,11 +250,15 @@ export const Main = () => {
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              value={selectedMonth}
+              value={selectIndex}
               label="Age"
               onChange={handleMonthSelect}
             >
-              {displayedMonths?.map((month, index) => <MenuItem value={index + 1}>{month}</MenuItem>)}
+              {monthYears?.map(({ month, year }, index) => (
+                <MenuItem value={index}>
+                  {MONTHS[month]} {year}
+                </MenuItem>
+              ))}
             </Select>
           </Grid>
           <Grid item>

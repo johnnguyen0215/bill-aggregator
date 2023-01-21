@@ -1,4 +1,4 @@
-import { createContext , useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import loadScript from 'load-script';
 
 const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
@@ -30,13 +30,10 @@ export const GapiProvider = ({ children }) => {
       const { google } = window;
 
       if (google) {
-        console.log('Client ID: ', process.env.REACT_APP_GMAIL_CLIENT_ID)
         const token = google.accounts.oauth2.initTokenClient({
           client_id: process.env.REACT_APP_GMAIL_CLIENT_ID,
           scope: SCOPES,
         });
-
-        console.log('Token: ', token)
 
         setTokenClient(token);
         setGsiLoaded(true);
@@ -50,16 +47,17 @@ export const GapiProvider = ({ children }) => {
     });
   }, []);
 
-  const contextValues = useMemo(() => ({gapiLoaded,gsiLoaded,tokenClient}), [gapiLoaded,gsiLoaded,tokenClient])
+  const contextValues = useMemo(
+    () => ({ gapiLoaded, gsiLoaded, tokenClient }),
+    [gapiLoaded, gsiLoaded, tokenClient]
+  );
 
   return (
-    <GapiContext.Provider
-      value={contextValues}
-    >
+    <GapiContext.Provider value={contextValues}>
       {children}
     </GapiContext.Provider>
   );
-}
+};
 
 export const useGapi = () => {
   const gapiContext = useContext(GapiContext);
@@ -68,4 +66,3 @@ export const useGapi = () => {
     ...gapiContext,
   };
 };
-
