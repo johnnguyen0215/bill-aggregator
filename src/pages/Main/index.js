@@ -20,7 +20,6 @@ import { Article, Delete, Edit } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
 import { blue, green, red } from '@mui/material/colors';
 import { format } from 'date-fns';
-import { hydrate } from 'react-dom';
 import { getDollarAmount, getMessage } from '../../shared/messages';
 import { useAuth } from '../../providers/auth';
 import { DetailsDrawer } from '../../components/DetailsDrawer';
@@ -89,6 +88,8 @@ export const Main = () => {
 
   const [billTotal, setBillTotal] = useState(0);
 
+  const [adjustment, setAdjustment] = useState(0);
+
   const failureCallback = useCallback(() => {
     signout();
   }, [signout]);
@@ -120,10 +121,23 @@ export const Main = () => {
 
         htmlList.push(billMessage?.body);
 
+        const dollarAmount = getDollarAmount(billMessage?.body);
+
+        const amount = parseFloat(dollarAmount || 0);
+        const modifier = parseFloat(bill.modifier || 0);
+
+        let finalAmount = amount;
+
+        if (dollarAmount) {
+          finalAmount = amount + modifier;
+        }
+
         return {
           ...bill,
           messageBody: billMessage?.body,
-          amount: getDollarAmount(billMessage?.body),
+          modifier,
+          amount,
+          finalAmount,
           date: messageDate,
         };
       }
@@ -171,6 +185,12 @@ export const Main = () => {
   const handleSaveBill = (billDetails) => {
     const { index, ...billInfo } = billDetails;
 
+    billInfo.finalAmount = parseFloat(billInfo.amount);
+
+    if (billInfo.modifier) {
+      billInfo.finalAmount += parseFloat(billInfo.modifier || 0);
+    }
+
     const updatedBillData = [...billData];
 
     if (index !== undefined) {
@@ -205,6 +225,10 @@ export const Main = () => {
     setIsBillDrawerOpen(true);
   };
 
+  const handleAdjustmentChange = (evt) => {
+    setAdjustment(evt.target.value);
+  };
+
   useEffect(() => {
     if (billData) {
       localStorage.setItem(
@@ -215,7 +239,9 @@ export const Main = () => {
       const total = billData.reduce(
         (acc, billInfo) =>
           acc +
-          (billInfo.amount !== undefined ? parseFloat(billInfo.amount) : 0),
+          (billInfo.finalAmount !== undefined
+            ? parseFloat(billInfo.finalAmount)
+            : parseFloat(billInfo.amount)),
         0
       );
 
@@ -292,7 +318,9 @@ export const Main = () => {
                 <TableCell>{bill.email}</TableCell>
                 <TableCell>{bill.subject}</TableCell>
                 <TableCell>
-                  {bill.amount !== undefined ? `$${bill.amount}` : 'Empty'}
+                  {bill.finalAmount !== undefined
+                    ? `$${bill.finalAmount.toFixed(2)}`
+                    : `$${bill.amount}`}
                 </TableCell>
                 <TableCell>{bill.date ? bill.date : 'Empty'}</TableCell>
                 <TableCell>
@@ -363,8 +391,19 @@ export const Main = () => {
           value={divisor}
           onChange={handleDivisorChange}
         />
+        <TextField
+          sx={{
+            marginLeft: '20px',
+            marginTop: '20px',
+          }}
+          type="number"
+          label="Adjustment"
+          value={adjustment}
+          onChange={handleAdjustmentChange}
+        />
         <Typography variant="h5" sx={{ marginTop: '20px' }}>
-          Monthly Split: ${(billTotal / divisor).toFixed(2)}
+          Monthly Split: $
+          {(billTotal / divisor + parseFloat(adjustment || 0)).toFixed(2)}
         </Typography>
       </Paper>
       <Modal open={billModalOpen} onClose={handleBillModalClose}>

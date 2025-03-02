@@ -1,19 +1,27 @@
 const queryBuilder = (
   email,
   subject,
+  body,
   { month: selectedMonth, year: selectedYear }
 ) => {
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  let beforeMonth;
+  let beforeYear;
+  const afterMonth = selectedMonth + 1;
+  const afterYear = selectedYear;
 
-  const beforeDate = `${currentMonth + 1}/15/${currentYear}`;
-  const afterDate = `${selectedMonth + 1}/15/${selectedYear}`;
+  // If selected month is december, we want to compare against January of next year.
+  if (selectedMonth + 2 > 12) {
+    beforeMonth = 1;
+    beforeYear = selectedYear + 1;
+  } else {
+    beforeMonth = selectedMonth + 2;
+    beforeYear = selectedYear;
+  }
 
-  console.log('BeforeDate: ', beforeDate);
-  console.log('AfterDate: ', afterDate);
+  const beforeDate = `${beforeMonth}/15/${beforeYear}`;
+  const afterDate = `${afterMonth}/15/${afterYear}`;
 
-  return `from:${email} AND subject:${subject} AND before:${beforeDate} AND after:${afterDate}`;
+  return `from:${email} AND subject:${subject} AND before:${beforeDate} AND after:${afterDate} + "${body}"`;
 };
 
 export const getMessage = async (
@@ -27,7 +35,12 @@ export const getMessage = async (
     response = await window.gapi.client.gmail.users.messages.list({
       userId: 'me',
       maxResults: 10,
-      q: queryBuilder(billInfo.email, billInfo.subject, selectedMonthYear),
+      q: queryBuilder(
+        billInfo.email,
+        billInfo.subject,
+        billInfo.body,
+        selectedMonthYear
+      ),
     });
   } catch (err) {
     failureCallback();
@@ -79,6 +92,5 @@ export const getMessage = async (
 
 export const getDollarAmount = (emailBody) => {
   const matches = emailBody.match(/\$[0-9]+(\.[0-9]+)?/g);
-
   return matches?.[0]?.slice(1);
 };

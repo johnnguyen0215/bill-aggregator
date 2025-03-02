@@ -20,7 +20,9 @@ export const DetailsDrawer = ({
   const [name, setName] = useState(billDetailFields.name);
   const [email, setEmail] = useState(billDetailFields.email);
   const [subject, setSubject] = useState(billDetailFields.subject);
+  const [body, setBody] = useState(billDetailFields.body);
   const [amount, setAmount] = useState(billDetailFields.amount);
+  const [modifier, setModifier] = useState(billDetailFields.modifier);
 
   const handleFieldChange = (fieldName, value) => {
     switch (fieldName) {
@@ -33,8 +35,14 @@ export const DetailsDrawer = ({
       case 'subject':
         setSubject(value);
         break;
+      case 'body':
+        setBody(value);
+        break;
       case 'amount':
         setAmount(value);
+        break;
+      case 'modifier':
+        setModifier(value);
         break;
       default:
     }
@@ -46,6 +54,8 @@ export const DetailsDrawer = ({
       email,
       subject,
       amount,
+      modifier,
+      body,
       index: billDetailFields.index,
       id: snakeCase(name),
       type: email ? 'email' : 'manual',
@@ -60,6 +70,8 @@ export const DetailsDrawer = ({
       setEmail(billDetailFields.email);
       setSubject(billDetailFields.subject);
       setAmount(billDetailFields.amount);
+      setBody(billDetailFields.body);
+      setModifier(billDetailFields.modifier);
     }
   }, [billDetailFields]);
 
@@ -95,6 +107,14 @@ export const DetailsDrawer = ({
             }
           />
         </div>
+        <div className={`${styles.textFieldContainer}`} value={body}>
+          <TextField
+            label="Body"
+            fullWidth={500}
+            value={body}
+            onChange={(event) => handleFieldChange('body', event.target.value)}
+          />
+        </div>
         <div className={styles.textFieldContainer} value={amount}>
           <TextField
             label="Amount"
@@ -107,6 +127,21 @@ export const DetailsDrawer = ({
             }}
             onChange={(event) =>
               handleFieldChange('amount', event.target.value)
+            }
+          />
+        </div>
+        <div className={styles.textFieldContainer} value={modifier}>
+          <TextField
+            label="Modifier"
+            type="number"
+            value={modifier}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
+            }}
+            onChange={(event) =>
+              handleFieldChange('modifier', event.target.value)
             }
           />
         </div>
