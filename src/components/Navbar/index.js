@@ -23,5 +23,4 @@ export const NavBar = () => {
       </Toolbar>
     </AppBar>
   );
-}
-
+};

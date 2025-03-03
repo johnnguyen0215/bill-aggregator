@@ -21,7 +21,9 @@ const queryBuilder = (
   const beforeDate = `${beforeMonth}/15/${beforeYear}`;
   const afterDate = `${afterMonth}/15/${afterYear}`;
 
-  return `from:${email} AND subject:${subject} AND before:${beforeDate} AND after:${afterDate} + "${body}"`;
+  const bodySearch = body ? ` AND "${body}"` : '';
+
+  return `from:${email} AND subject:${subject} AND before:${beforeDate} AND after:${afterDate}${bodySearch}`;
 };
 
 export const getMessage = async (
