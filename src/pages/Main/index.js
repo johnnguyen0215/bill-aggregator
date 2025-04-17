@@ -15,8 +15,9 @@ import {
   TextField,
   Modal,
   Box,
+  Input,
 } from '@mui/material';
-import { Article, Delete, Edit } from '@mui/icons-material';
+import { Article, Delete, Edit, Download } from '@mui/icons-material';
 import { useCallback, useEffect, useState } from 'react';
 import { blue, green, red } from '@mui/material/colors';
 import { format } from 'date-fns';
@@ -229,6 +230,50 @@ export const Main = () => {
     setAdjustment(evt.target.value);
   };
 
+  const handleExport = () => {
+    // Grab the local storage item with the key bill_aggregator_data and write it to a json file in the user's file system
+    const billAggregatorData = localStorage.getItem('bill_aggregator_data');
+
+    const blob = new Blob([billAggregatorData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bill_aggregator_data_${format(
+      new Date(),
+      'yyyy-MM-dd'
+    )}.json`;
+    a.click();
+
+    // Remove the blob from memory
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (event) => {
+    console.log('Handling import: ', event);
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log('file', file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      console.log('onload invoked');
+      try {
+        const billAggregatorData = JSON.parse(e.target.result);
+        console.log(billAggregatorData);
+        localStorage.setItem(
+          'bill_aggregator_data',
+          JSON.stringify(billAggregatorData)
+        );
+        // Optionally refresh the bill data state here
+        setBillData(billAggregatorData);
+      } catch (error) {
+        console.error('Error parsing JSON file:', error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   useEffect(() => {
     if (billData) {
       localStorage.setItem(
@@ -429,6 +474,39 @@ export const Main = () => {
         handleClose={handleBillDrawerClose}
         handleSave={handleSaveBill}
         billDetailFields={billDetailFields}
+      />
+      <Button
+        sx={{
+          marginTop: '20px',
+          textTransform: 'none',
+          fontWeight: 'normal',
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          },
+        }}
+        variant="outlined"
+        onClick={handleExport}
+        startIcon={<Download />}
+      >
+        Export Bill Data
+      </Button>
+
+      <Typography
+        component="label"
+        htmlFor="file-input"
+        sx={{
+          marginTop: '50px',
+          display: 'block',
+        }}
+      >
+        Import Bill Data
+      </Typography>
+      <Input
+        id="file-input"
+        type="file"
+        accept=".json"
+        variant="outlined"
+        onChange={handleImport}
       />
     </div>
   );
